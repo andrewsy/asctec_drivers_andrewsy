@@ -7,21 +7,23 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+set(ROS_BUILD_TYPE RelWithDebInfo)
 
 rosbuild_init()
 
-#set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+# create autopilot library
 
-set(ASCTEC_PROC      asctec_proc)
-set(ASCTEC_PROC_SRC  src/asctec_proc.cpp)
+rosbuild_add_library (asctec_proc src/asctec_proc.cpp)
 
-rosbuild_add_executable(${ASCTEC_PROC}   ${ASCTEC_PROC_SRC})
+# create autopilot_nodelet library
+
+rosbuild_add_library (asctec_proc_nodelet src/asctec_proc_nodelet.cpp)
+target_link_libraries (asctec_proc_nodelet asctec_proc)
+
+# create autopilot_node executable
+
+rosbuild_add_executable(asctec_proc_node src/asctec_proc_node.cpp)
+target_link_libraries (asctec_proc_node asctec_proc)

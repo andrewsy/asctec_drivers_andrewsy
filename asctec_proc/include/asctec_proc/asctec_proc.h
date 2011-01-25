@@ -8,6 +8,9 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 
+const std::string subscribe_namespace_ = "asctec_raw";
+const std::string publish_namespace_   = "asctec_proc";
+
 const std::string imuCalcDataTopic_    = "IMU_CALCDATA";
 const std::string imuTopic_            = "imu";
 const std::string heightTopic_         = "pressure_height";
@@ -24,6 +27,9 @@ class AsctecProc
 {
   private:
 
+    ros::NodeHandle nh_;
+    ros::NodeHandle nh_private_;
+
     ros::Subscriber imuCalcDataSubscriber_;
     ros::Publisher  imuPublisher_;
     ros::Publisher  heightPublisher_;
@@ -33,17 +39,17 @@ class AsctecProc
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg);
 
     void createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                            sensor_msgs::Imu& imuMsg);
+                            sensor_msgs::ImuPtr& imuMsg);
 
     void createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                               asctec_msgs::Height& heightMsg);
+                               asctec_msgs::HeightPtr& heightMsg);
 
     void createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                       asctec_msgs::Height& heightMsg);
+                                       asctec_msgs::HeightPtr& heightMsg);
 
   public:
 
-    AsctecProc();
+    AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private);
     virtual ~AsctecProc();
 
 };

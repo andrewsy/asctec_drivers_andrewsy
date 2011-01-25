@@ -24,84 +24,73 @@
 
 #include "asctec_autopilot/autopilot.h"
 
-int main (int argc, char **argv)
-{
-  ros::init (argc, argv, "autopilot");
-  asctec::AutoPilot::AutoPilot autopilot;
-  ros::spin ();
-  return 0;
-}
-
 namespace asctec
 {
-  AutoPilot::AutoPilot () : diag_updater_()
+  AutoPilot::AutoPilot(ros::NodeHandle nh, ros::NodeHandle nh_private): 
+    nh_(nh), 
+    nh_private_(nh_private),
+    diag_updater_()
   {
     ROS_INFO ("Creating AutoPilot Interface");
 
-    ros::NodeHandle nh;
-    ros::NodeHandle nh_private ("~");
-
     // **** get parameters
 
-
-    if (!nh_private.getParam ("freq", freq_))
+    if (!nh_private_.getParam ("freq", freq_))
       freq_ = 50.0;
-
-    if (!nh_private.getParam ("port", port_))
+    if (!nh_private_.getParam ("port", port_))
       port_ = "/dev/ttyUSB0";
-
-    if (!nh_private.getParam ("speed", speed_))
+    if (!nh_private_.getParam ("speed", speed_))
       speed_ = 57600;
 
-    if (!nh_private.getParam ("enable_LL_STATUS", enable_LL_STATUS_))
+    if (!nh_private_.getParam ("enable_LL_STATUS", enable_LL_STATUS_))
       enable_LL_STATUS_ = false;
-    if (!nh_private.getParam ("enable_IMU_RAWDATA", enable_IMU_RAWDATA_))
+    if (!nh_private_.getParam ("enable_IMU_RAWDATA", enable_IMU_RAWDATA_))
       enable_IMU_RAWDATA_ = false;
-    if (!nh_private.getParam ("enable_IMU_CALCDATA", enable_IMU_CALCDATA_))
+    if (!nh_private_.getParam ("enable_IMU_CALCDATA", enable_IMU_CALCDATA_))
       enable_IMU_CALCDATA_ = false;
-    if (!nh_private.getParam ("enable_RC_DATA", enable_RC_DATA_))
+    if (!nh_private_.getParam ("enable_RC_DATA", enable_RC_DATA_))
       enable_RC_DATA_ = false;
-    if (!nh_private.getParam ("enable_CONTROLLER_OUTPUT", enable_CONTROLLER_OUTPUT_))
+    if (!nh_private_.getParam ("enable_CONTROLLER_OUTPUT", enable_CONTROLLER_OUTPUT_))
       enable_CONTROLLER_OUTPUT_ = false;
-    if (!nh_private.getParam ("enable_GPS_DATA", enable_GPS_DATA_))
+    if (!nh_private_.getParam ("enable_GPS_DATA", enable_GPS_DATA_))
       enable_GPS_DATA_ = false;
-    if (!nh_private.getParam ("enable_GPS_DATA_ADVANCED", enable_GPS_DATA_ADVANCED_))
+    if (!nh_private_.getParam ("enable_GPS_DATA_ADVANCED", enable_GPS_DATA_ADVANCED_))
       enable_GPS_DATA_ADVANCED_ = false;
-    if (!nh_private.getParam ("enable_CONTROL", enable_CONTROL_))
+    if (!nh_private_.getParam ("enable_CONTROL", enable_CONTROL_))
       enable_CONTROL_ = false;
 
-    if (!nh_private.getParam ("interval_LL_STATUS", interval_LL_STATUS_))
+    if (!nh_private_.getParam ("interval_LL_STATUS", interval_LL_STATUS_))
       interval_LL_STATUS_ = 1;
-    if (!nh_private.getParam ("interval_IMU_RAWDATA", interval_IMU_RAWDATA_))
+    if (!nh_private_.getParam ("interval_IMU_RAWDATA", interval_IMU_RAWDATA_))
       interval_IMU_RAWDATA_ = 1;
-    if (!nh_private.getParam ("interval_IMU_CALCDATA", interval_IMU_CALCDATA_))
+    if (!nh_private_.getParam ("interval_IMU_CALCDATA", interval_IMU_CALCDATA_))
       interval_IMU_CALCDATA_ = 1;
-    if (!nh_private.getParam ("interval_RC_DATA", interval_RC_DATA_))
+    if (!nh_private_.getParam ("interval_RC_DATA", interval_RC_DATA_))
       interval_RC_DATA_ = 1;
-    if (!nh_private.getParam ("interval_CONTROLLER_OUTPUT", interval_CONTROLLER_OUTPUT_))
+    if (!nh_private_.getParam ("interval_CONTROLLER_OUTPUT", interval_CONTROLLER_OUTPUT_))
       interval_CONTROLLER_OUTPUT_ = 1;
-    if (!nh_private.getParam ("interval_GPS_DATA", interval_GPS_DATA_))
+    if (!nh_private_.getParam ("interval_GPS_DATA", interval_GPS_DATA_))
       interval_GPS_DATA_ = 1;
-    if (!nh_private.getParam ("interval_GPS_DATA_ADVANCED", interval_GPS_DATA_ADVANCED_))
+    if (!nh_private_.getParam ("interval_GPS_DATA_ADVANCED", interval_GPS_DATA_ADVANCED_))
       interval_GPS_DATA_ADVANCED_ = 1;
-    if (!nh_private.getParam ("interval_CONTROL", interval_CONTROL_))
+    if (!nh_private_.getParam ("interval_CONTROL", interval_CONTROL_))
       interval_CONTROL_ = 1;
 
-    if (!nh_private.getParam ("offset_LL_STATUS", offset_LL_STATUS_))
+    if (!nh_private_.getParam ("offset_LL_STATUS", offset_LL_STATUS_))
       offset_LL_STATUS_ = 0;
-    if (!nh_private.getParam ("offset_IMU_RAWDATA", offset_IMU_RAWDATA_))
+    if (!nh_private_.getParam ("offset_IMU_RAWDATA", offset_IMU_RAWDATA_))
       offset_IMU_RAWDATA_ = 0;
-    if (!nh_private.getParam ("offset_IMU_CALCDATA", offset_IMU_CALCDATA_))
+    if (!nh_private_.getParam ("offset_IMU_CALCDATA", offset_IMU_CALCDATA_))
       offset_IMU_CALCDATA_ = 0;
-    if (!nh_private.getParam ("offset_RC_DATA", offset_RC_DATA_))
+    if (!nh_private_.getParam ("offset_RC_DATA", offset_RC_DATA_))
       offset_RC_DATA_ = 0;
-    if (!nh_private.getParam ("offset_CONTROLLER_OUTPUT", offset_CONTROLLER_OUTPUT_))
+    if (!nh_private_.getParam ("offset_CONTROLLER_OUTPUT", offset_CONTROLLER_OUTPUT_))
       offset_CONTROLLER_OUTPUT_ = 0;
-    if (!nh_private.getParam ("offset_GPS_DATA", offset_GPS_DATA_))
+    if (!nh_private_.getParam ("offset_GPS_DATA", offset_GPS_DATA_))
       offset_GPS_DATA_ = 0;
-    if (!nh_private.getParam ("offset_GPS_DATA_ADVANCED", offset_GPS_DATA_ADVANCED_))
+    if (!nh_private_.getParam ("offset_GPS_DATA_ADVANCED", offset_GPS_DATA_ADVANCED_))
       offset_GPS_DATA_ADVANCED_ = 0;
-    if (!nh_private.getParam ("offset_CONTROL", offset_CONTROL_))
+    if (!nh_private_.getParam ("offset_CONTROL", offset_CONTROL_))
       offset_CONTROL_ = 0;
 
     if (freq_ <= 0.0)
@@ -114,7 +103,9 @@ namespace asctec
     serialInterface_ = new asctec::SerialInterface::SerialInterface (port_, speed_);
     serialInterface_->serialport_bytes_rx_ = 0;
     serialInterface_->serialport_bytes_tx_ = 0;
-    telemetry_ = new asctec::Telemetry::Telemetry ();
+
+    ros::NodeHandle nh_publish(nh_, publish_namespace_);    // publish to "asctec_raw" namespace"
+    telemetry_ = new asctec::Telemetry::Telemetry(nh_publish);
 
     // Diagnostics
     diag_updater_.add("AscTec Autopilot Status", this, &AutoPilot::diagnostics);
@@ -123,14 +114,7 @@ namespace asctec
 
     // **** enable polling
     if(enable_LL_STATUS_ == true)
-    {
-      ROS_INFO("LL_STATUS Polling Enabled");
       telemetry_->enablePolling (asctec::RequestTypes::LL_STATUS, interval_LL_STATUS_, offset_LL_STATUS_);
-    }
-    else
-    {
-      ROS_INFO("LL_STATUS Polling Disabled");
-    }
     if(enable_RC_DATA_)
       telemetry_->enablePolling (asctec::RequestTypes::RC_DATA, interval_RC_DATA_, offset_RC_DATA_);
     if(enable_CONTROLLER_OUTPUT_)
@@ -154,12 +138,15 @@ namespace asctec
     {
       ROS_INFO("Control Disabled");
     }
-    timer_ = nh_private.createTimer (d, &AutoPilot::spin, this);
+    timer_ = nh_private_.createTimer (d, &AutoPilot::spin, this);
   }
 
   AutoPilot::~AutoPilot ()
   {
     ROS_INFO ("Destroying AutoPilot Interface");
+
+    delete telemetry_;
+    delete serialInterface_;
   }
 
   void AutoPilot::spin(const ros::TimerEvent & e)

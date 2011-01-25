@@ -39,7 +39,7 @@
 
 namespace asctec
 {
-  Telemetry::Telemetry ()
+  Telemetry::Telemetry (ros::NodeHandle nh): nh_(nh)
   {
     requestCount_ = 0;
     pollingEnabled_ = false;
@@ -56,6 +56,16 @@ namespace asctec
     REQUEST_BITMASK[RequestTypes::GPS_DATA_ADVANCED] = 0x0200;
     REQUEST_BITMASK[RequestTypes::CAM_DATA] = 0x0800;
     estop_ = false;
+
+    // initialize pointers
+
+    LLStatus_         = boost::make_shared<asctec_msgs::LLStatus>        ();
+    IMURawData_       = boost::make_shared<asctec_msgs::IMURawData>      ();
+    IMUCalcData_      = boost::make_shared<asctec_msgs::IMUCalcData>     ();
+    RCData_           = boost::make_shared<asctec_msgs::RCData>          ();
+    ControllerOutput_ = boost::make_shared<asctec_msgs::ControllerOutput>();
+    GPSData_          = boost::make_shared<asctec_msgs::GPSData>         ();
+    GPSDataAdvanced_  = boost::make_shared<asctec_msgs::GPSDataAdvanced> ();
   }
   Telemetry::~Telemetry ()
   {
@@ -83,40 +93,40 @@ namespace asctec
         {
           case RequestTypes::LL_STATUS:
             copyLL_STATUS ();
-            LLStatus_.header.stamp = timestamps_[RequestTypes::LL_STATUS];
+            LLStatus_->header.stamp = timestamps_[RequestTypes::LL_STATUS];
             //dumpLL_STATUS ();
             requestPublisher_[i].publish (LLStatus_);
             break;
           case RequestTypes::IMU_RAWDATA:
             copyIMU_RAWDATA ();
-            IMURawData_.header.stamp = timestamps_[RequestTypes::IMU_RAWDATA];
+            IMURawData_->header.stamp = timestamps_[RequestTypes::IMU_RAWDATA];
             //dumpIMU_RAWDATA();
             requestPublisher_[i].publish (IMURawData_);
             break;
           case RequestTypes::IMU_CALCDATA:
             copyIMU_CALCDATA ();
-            IMUCalcData_.header.stamp = timestamps_[RequestTypes::IMU_CALCDATA];
+            IMUCalcData_->header.stamp = timestamps_[RequestTypes::IMU_CALCDATA];
             //dumpIMU_CALCDATA();
             requestPublisher_[i].publish (IMUCalcData_);
             break;
           case RequestTypes::GPS_DATA:
             copyGPS_DATA ();
-            GPSData_.header.stamp = timestamps_[RequestTypes::GPS_DATA];
+            GPSData_->header.stamp = timestamps_[RequestTypes::GPS_DATA];
             requestPublisher_[i].publish (GPSData_);
             break;
           case RequestTypes::RC_DATA:
             copyRC_DATA ();
-            RCData_.header.stamp = timestamps_[RequestTypes::RC_DATA];
+            RCData_->header.stamp = timestamps_[RequestTypes::RC_DATA];
             requestPublisher_[i].publish (RCData_);
             break;
           case RequestTypes::CONTROLLER_OUTPUT:
             copyCONTROLLER_OUTPUT ();
-            ControllerOutput_.header.stamp = timestamps_[RequestTypes::CONTROLLER_OUTPUT];
+            ControllerOutput_->header.stamp = timestamps_[RequestTypes::CONTROLLER_OUTPUT];
             requestPublisher_[i].publish (ControllerOutput_);
             break;
           case RequestTypes::GPS_DATA_ADVANCED:
             copyGPS_DATA_ADVANCED ();
-            GPSDataAdvanced_.header.stamp = timestamps_[RequestTypes::GPS_DATA_ADVANCED];
+            GPSDataAdvanced_->header.stamp = timestamps_[RequestTypes::GPS_DATA_ADVANCED];
            //dumpGPS_DATA_ADVANCED();
             requestPublisher_[i].publish (GPSDataAdvanced_);
             break;
@@ -129,26 +139,25 @@ namespace asctec
 
   void Telemetry::enablePolling (RequestType msg, uint8_t interval, uint8_t offset)
   {
-    ros::NodeHandle nh_private ("~");
     switch (msg)
     {
       case RequestTypes::LL_STATUS:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::LLStatus > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::LLStatus > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::IMU_RAWDATA:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::IMURawData > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::IMURawData > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::IMU_CALCDATA:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::IMUCalcData > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::IMUCalcData > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::RC_DATA:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::RCData > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::RCData > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::GPS_DATA:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::GPSData > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::GPSData > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::GPS_DATA_ADVANCED:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::GPSDataAdvanced > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::GPSDataAdvanced > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::WAYPOINT:
         // to be filled in 
@@ -157,11 +166,11 @@ namespace asctec
         // to be filled in 
         break;
       case RequestTypes::CONTROLLER_OUTPUT:
-        requestPublisher_[msg] = nh_private.advertise < asctec_msgs::ControllerOutput > (requestToString (msg).c_str (), 10);
+        requestPublisher_[msg] = nh_.advertise < asctec_msgs::ControllerOutput > (requestToString (msg).c_str (), 10);
         break;
     }
 
-    ROS_INFO ("Publishing %s data on topic: %s", requestToString (msg).c_str (), requestToString (msg).c_str ());
+    ROS_INFO ("Publishing %s data", requestToString (msg).c_str());
     ROS_DEBUG ("Telemetry::enablePolling()");
     requestInterval_[msg] = interval;
     requestOffset_[msg] = offset;
@@ -170,11 +179,10 @@ namespace asctec
 
   void Telemetry::enableControl (Telemetry * telemetry_, uint8_t interval, uint8_t offset)
   {
-    ros::NodeHandle nh_private ("~");
-    controlSubscriber_ = nh_private.subscribe("CTRL_INPUT", 1, &Telemetry::copyCTRL_INPUT, telemetry_, ros::TransportHints().tcpNoDelay());
+    controlSubscriber_ = nh_.subscribe("CTRL_INPUT", 1, &Telemetry::copyCTRL_INPUT, telemetry_, ros::TransportHints().tcpNoDelay());
     ROS_INFO("Listening to %s data on topic: %s", "CTRL_INPUT","CTRL_INPUT");
     ROS_DEBUG ("Telemetry::enableControl()");
-    estopSubscriber_ = nh_private.subscribe("ESTOP", 1, &Telemetry::estopCallback, telemetry_, ros::TransportHints().tcpNoDelay());
+    estopSubscriber_ = nh_.subscribe("ESTOP", 1, &Telemetry::estopCallback, telemetry_, ros::TransportHints().tcpNoDelay());
     controlInterval_ = interval;
     controlOffset_ = offset;
     controlEnabled_ = true;
@@ -372,111 +380,111 @@ namespace asctec
   }
   void Telemetry::copyLL_STATUS ()
   {
-    LLStatus_.battery_voltage_1 = LL_STATUS_.battery_voltage_1;
-    LLStatus_.battery_voltage_2 = LL_STATUS_.battery_voltage_2;
-    LLStatus_.status = LL_STATUS_.status;
-    LLStatus_.cpu_load = LL_STATUS_.cpu_load;
-    LLStatus_.compass_enabled = LL_STATUS_.compass_enabled;
-    LLStatus_.chksum_error = LL_STATUS_.chksum_error;
-    LLStatus_.flying = LL_STATUS_.flying;
-    LLStatus_.motors_on = LL_STATUS_.motors_on;
-    LLStatus_.flightMode = LL_STATUS_.flightMode;
-    LLStatus_.up_time = LL_STATUS_.up_time;
+    LLStatus_->battery_voltage_1 = LL_STATUS_.battery_voltage_1;
+    LLStatus_->battery_voltage_2 = LL_STATUS_.battery_voltage_2;
+    LLStatus_->status = LL_STATUS_.status;
+    LLStatus_->cpu_load = LL_STATUS_.cpu_load;
+    LLStatus_->compass_enabled = LL_STATUS_.compass_enabled;
+    LLStatus_->chksum_error = LL_STATUS_.chksum_error;
+    LLStatus_->flying = LL_STATUS_.flying;
+    LLStatus_->motors_on = LL_STATUS_.motors_on;
+    LLStatus_->flightMode = LL_STATUS_.flightMode;
+    LLStatus_->up_time = LL_STATUS_.up_time;
   }
   void Telemetry::copyIMU_RAWDATA ()
   {
-    IMURawData_.pressure = IMU_RAWDATA_.pressure;
-    IMURawData_.gyro_x = IMU_RAWDATA_.gyro_x;
-    IMURawData_.gyro_y = IMU_RAWDATA_.gyro_y;
-    IMURawData_.gyro_z = IMU_RAWDATA_.gyro_z;
-    IMURawData_.mag_x = IMU_RAWDATA_.mag_x;
-    IMURawData_.mag_y = IMU_RAWDATA_.mag_y;
-    IMURawData_.mag_z = IMU_RAWDATA_.mag_z;
-    IMURawData_.acc_x = IMU_RAWDATA_.acc_x;
-    IMURawData_.acc_y = IMU_RAWDATA_.acc_y;
-    IMURawData_.acc_z = IMU_RAWDATA_.acc_z;
-    IMURawData_.temp_gyro = IMU_RAWDATA_.temp_gyro;
-    IMURawData_.temp_ADC = IMU_RAWDATA_.temp_ADC;
+    IMURawData_->pressure = IMU_RAWDATA_.pressure;
+    IMURawData_->gyro_x = IMU_RAWDATA_.gyro_x;
+    IMURawData_->gyro_y = IMU_RAWDATA_.gyro_y;
+    IMURawData_->gyro_z = IMU_RAWDATA_.gyro_z;
+    IMURawData_->mag_x = IMU_RAWDATA_.mag_x;
+    IMURawData_->mag_y = IMU_RAWDATA_.mag_y;
+    IMURawData_->mag_z = IMU_RAWDATA_.mag_z;
+    IMURawData_->acc_x = IMU_RAWDATA_.acc_x;
+    IMURawData_->acc_y = IMU_RAWDATA_.acc_y;
+    IMURawData_->acc_z = IMU_RAWDATA_.acc_z;
+    IMURawData_->temp_gyro = IMU_RAWDATA_.temp_gyro;
+    IMURawData_->temp_ADC = IMU_RAWDATA_.temp_ADC;
   }
   void Telemetry::copyIMU_CALCDATA ()
   {
-    IMUCalcData_.angle_nick = IMU_CALCDATA_.angle_nick;
-    IMUCalcData_.angle_roll = IMU_CALCDATA_.angle_roll;
-    IMUCalcData_.angle_yaw = IMU_CALCDATA_.angle_yaw;
-    IMUCalcData_.angvel_nick = IMU_CALCDATA_.angvel_nick;
-    IMUCalcData_.angvel_roll = IMU_CALCDATA_.angvel_roll;
-    IMUCalcData_.angvel_yaw = IMU_CALCDATA_.angvel_yaw;
-    IMUCalcData_.acc_x_calib = IMU_CALCDATA_.acc_x_calib;
-    IMUCalcData_.acc_y_calib = IMU_CALCDATA_.acc_y_calib;
-    IMUCalcData_.acc_z_calib = IMU_CALCDATA_.acc_z_calib;
-    IMUCalcData_.acc_x = IMU_CALCDATA_.acc_x;
-    IMUCalcData_.acc_y = IMU_CALCDATA_.acc_y;
-    IMUCalcData_.acc_z = IMU_CALCDATA_.acc_z;
-    IMUCalcData_.acc_angle_nick = IMU_CALCDATA_.acc_angle_nick;
-    IMUCalcData_.acc_angle_roll = IMU_CALCDATA_.acc_angle_roll;
-    IMUCalcData_.acc_absolute_value = IMU_CALCDATA_.acc_absolute_value;
-    IMUCalcData_.Hx = IMU_CALCDATA_.Hx;
-    IMUCalcData_.Hy = IMU_CALCDATA_.Hy;
-    IMUCalcData_.Hz = IMU_CALCDATA_.Hz;
-    IMUCalcData_.mag_heading = IMU_CALCDATA_.mag_heading;
-    IMUCalcData_.speed_x = IMU_CALCDATA_.speed_x;
-    IMUCalcData_.speed_y = IMU_CALCDATA_.speed_y;
-    IMUCalcData_.speed_z = IMU_CALCDATA_.speed_z;
-    IMUCalcData_.height = IMU_CALCDATA_.height;
-    IMUCalcData_.dheight = IMU_CALCDATA_.dheight;
-    IMUCalcData_.dheight_reference = IMU_CALCDATA_.dheight_reference;
-    IMUCalcData_.height_reference = IMU_CALCDATA_.height_reference;
+    IMUCalcData_->angle_nick = IMU_CALCDATA_.angle_nick;
+    IMUCalcData_->angle_roll = IMU_CALCDATA_.angle_roll;
+    IMUCalcData_->angle_yaw = IMU_CALCDATA_.angle_yaw;
+    IMUCalcData_->angvel_nick = IMU_CALCDATA_.angvel_nick;
+    IMUCalcData_->angvel_roll = IMU_CALCDATA_.angvel_roll;
+    IMUCalcData_->angvel_yaw = IMU_CALCDATA_.angvel_yaw;
+    IMUCalcData_->acc_x_calib = IMU_CALCDATA_.acc_x_calib;
+    IMUCalcData_->acc_y_calib = IMU_CALCDATA_.acc_y_calib;
+    IMUCalcData_->acc_z_calib = IMU_CALCDATA_.acc_z_calib;
+    IMUCalcData_->acc_x = IMU_CALCDATA_.acc_x;
+    IMUCalcData_->acc_y = IMU_CALCDATA_.acc_y;
+    IMUCalcData_->acc_z = IMU_CALCDATA_.acc_z;
+    IMUCalcData_->acc_angle_nick = IMU_CALCDATA_.acc_angle_nick;
+    IMUCalcData_->acc_angle_roll = IMU_CALCDATA_.acc_angle_roll;
+    IMUCalcData_->acc_absolute_value = IMU_CALCDATA_.acc_absolute_value;
+    IMUCalcData_->Hx = IMU_CALCDATA_.Hx;
+    IMUCalcData_->Hy = IMU_CALCDATA_.Hy;
+    IMUCalcData_->Hz = IMU_CALCDATA_.Hz;
+    IMUCalcData_->mag_heading = IMU_CALCDATA_.mag_heading;
+    IMUCalcData_->speed_x = IMU_CALCDATA_.speed_x;
+    IMUCalcData_->speed_y = IMU_CALCDATA_.speed_y;
+    IMUCalcData_->speed_z = IMU_CALCDATA_.speed_z;
+    IMUCalcData_->height = IMU_CALCDATA_.height;
+    IMUCalcData_->dheight = IMU_CALCDATA_.dheight;
+    IMUCalcData_->dheight_reference = IMU_CALCDATA_.dheight_reference;
+    IMUCalcData_->height_reference = IMU_CALCDATA_.height_reference;
   }
   void Telemetry::copyRC_DATA ()
   {
     for (int i = 0; i < 8; i++)
     {
-      RCData_.channels_in[i] = RC_DATA_.channels_in[i];
-      RCData_.channels_out[i] = RC_DATA_.channels_out[i];
+      RCData_->channels_in[i] = RC_DATA_.channels_in[i];
+      RCData_->channels_out[i] = RC_DATA_.channels_out[i];
     }
-    RCData_.lock = RC_DATA_.lock;
+    RCData_->lock = RC_DATA_.lock;
   }
 
   void Telemetry::copyCONTROLLER_OUTPUT ()
   {
-    ControllerOutput_.nick = CONTROLLER_OUTPUT_.nick;
-    ControllerOutput_.roll = CONTROLLER_OUTPUT_.roll;
-    ControllerOutput_.yaw = CONTROLLER_OUTPUT_.yaw;
-    ControllerOutput_.thrust = CONTROLLER_OUTPUT_.thrust;
+    ControllerOutput_->nick = CONTROLLER_OUTPUT_.nick;
+    ControllerOutput_->roll = CONTROLLER_OUTPUT_.roll;
+    ControllerOutput_->yaw = CONTROLLER_OUTPUT_.yaw;
+    ControllerOutput_->thrust = CONTROLLER_OUTPUT_.thrust;
   }
 
   void Telemetry::copyGPS_DATA ()
   {
-    GPSData_.latitude = GPS_DATA_.latitude;
-    GPSData_.longitude = GPS_DATA_.longitude;
-    GPSData_.height = GPS_DATA_.height;
-    GPSData_.speed_x = GPS_DATA_.speed_x;
-    GPSData_.speed_y = GPS_DATA_.speed_y;
-    GPSData_.heading = GPS_DATA_.heading;
-    GPSData_.horizontal_accuracy = GPS_DATA_.horizontal_accuracy;
-    GPSData_.vertical_accuracy = GPS_DATA_.vertical_accuracy;
-    GPSData_.speed_accuracy = GPS_DATA_.speed_accuracy;
-    GPSData_.numSV = GPS_DATA_.numSV;
-    GPSData_.status = GPS_DATA_.status;
+    GPSData_->latitude = GPS_DATA_.latitude;
+    GPSData_->longitude = GPS_DATA_.longitude;
+    GPSData_->height = GPS_DATA_.height;
+    GPSData_->speed_x = GPS_DATA_.speed_x;
+    GPSData_->speed_y = GPS_DATA_.speed_y;
+    GPSData_->heading = GPS_DATA_.heading;
+    GPSData_->horizontal_accuracy = GPS_DATA_.horizontal_accuracy;
+    GPSData_->vertical_accuracy = GPS_DATA_.vertical_accuracy;
+    GPSData_->speed_accuracy = GPS_DATA_.speed_accuracy;
+    GPSData_->numSV = GPS_DATA_.numSV;
+    GPSData_->status = GPS_DATA_.status;
   }
 
   void Telemetry::copyGPS_DATA_ADVANCED ()
   {
-    GPSDataAdvanced_.latitude = GPS_DATA_ADVANCED_.latitude;
-    GPSDataAdvanced_.longitude = GPS_DATA_ADVANCED_.longitude;
-    GPSDataAdvanced_.height = GPS_DATA_ADVANCED_.height;
-    GPSDataAdvanced_.speed_x = GPS_DATA_ADVANCED_.speed_x;
-    GPSDataAdvanced_.speed_y = GPS_DATA_ADVANCED_.speed_y;
-    GPSDataAdvanced_.heading = GPS_DATA_ADVANCED_.heading;
-    GPSDataAdvanced_.horizontal_accuracy = GPS_DATA_ADVANCED_.horizontal_accuracy;
-    GPSDataAdvanced_.vertical_accuracy = GPS_DATA_ADVANCED_.vertical_accuracy;
-    GPSDataAdvanced_.speed_accuracy = GPS_DATA_ADVANCED_.speed_accuracy;
-    GPSDataAdvanced_.numSV = GPS_DATA_ADVANCED_.numSV;
-    GPSDataAdvanced_.status = GPS_DATA_ADVANCED_.status;
-    GPSDataAdvanced_.latitude_best_estimate = GPS_DATA_ADVANCED_.latitude_best_estimate;
-    GPSDataAdvanced_.longitude_best_estimate = GPS_DATA_ADVANCED_.longitude_best_estimate;
-    GPSDataAdvanced_.speed_x_best_estimate = GPS_DATA_ADVANCED_.speed_x_best_estimate;
-    GPSDataAdvanced_.speed_y_best_estimate = GPS_DATA_ADVANCED_.speed_y_best_estimate;
+    GPSDataAdvanced_->latitude = GPS_DATA_ADVANCED_.latitude;
+    GPSDataAdvanced_->longitude = GPS_DATA_ADVANCED_.longitude;
+    GPSDataAdvanced_->height = GPS_DATA_ADVANCED_.height;
+    GPSDataAdvanced_->speed_x = GPS_DATA_ADVANCED_.speed_x;
+    GPSDataAdvanced_->speed_y = GPS_DATA_ADVANCED_.speed_y;
+    GPSDataAdvanced_->heading = GPS_DATA_ADVANCED_.heading;
+    GPSDataAdvanced_->horizontal_accuracy = GPS_DATA_ADVANCED_.horizontal_accuracy;
+    GPSDataAdvanced_->vertical_accuracy = GPS_DATA_ADVANCED_.vertical_accuracy;
+    GPSDataAdvanced_->speed_accuracy = GPS_DATA_ADVANCED_.speed_accuracy;
+    GPSDataAdvanced_->numSV = GPS_DATA_ADVANCED_.numSV;
+    GPSDataAdvanced_->status = GPS_DATA_ADVANCED_.status;
+    GPSDataAdvanced_->latitude_best_estimate = GPS_DATA_ADVANCED_.latitude_best_estimate;
+    GPSDataAdvanced_->longitude_best_estimate = GPS_DATA_ADVANCED_.longitude_best_estimate;
+    GPSDataAdvanced_->speed_x_best_estimate = GPS_DATA_ADVANCED_.speed_x_best_estimate;
+    GPSDataAdvanced_->speed_y_best_estimate = GPS_DATA_ADVANCED_.speed_y_best_estimate;
   }
   void Telemetry::copyCTRL_INPUT(asctec_msgs::CtrlInput msg){
     CTRL_INPUT_.pitch = msg.pitch;

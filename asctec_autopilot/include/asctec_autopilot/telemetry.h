@@ -74,7 +74,7 @@ namespace asctec
    * This handles telemetry packet storage and processing.
    *
    */
-      Telemetry();
+      Telemetry(ros::NodeHandle nh);
   /**
    * \brief Destructor
    *
@@ -140,8 +140,6 @@ namespace asctec
     uint16_t requestCount_;
     uint16_t controlCount_;
     std::bitset < 16 > requestPackets_;
-
-
     
     static const uint8_t REQUEST_TYPES = 9;
 /*
@@ -431,13 +429,15 @@ You will receive an acknowledge if a command or a waypoint was received correctl
     struct WAYPOINT WAYPOINT_;
     struct GPS_DATA_ADVANCED GPS_DATA_ADVANCED_;
     struct CTRL_INPUT CTRL_INPUT_;
-    asctec_msgs::LLStatus LLStatus_;
-    asctec_msgs::IMURawData IMURawData_;
-    asctec_msgs::IMUCalcData IMUCalcData_;
-    asctec_msgs::RCData RCData_;
-    asctec_msgs::ControllerOutput ControllerOutput_;
-    asctec_msgs::GPSData GPSData_;
-    asctec_msgs::GPSDataAdvanced GPSDataAdvanced_;
+    asctec_msgs::LLStatusPtr LLStatus_;
+    asctec_msgs::IMURawDataPtr IMURawData_;
+    asctec_msgs::IMUCalcDataPtr IMUCalcData_;
+    asctec_msgs::RCDataPtr RCData_;
+    asctec_msgs::ControllerOutputPtr ControllerOutput_;
+    asctec_msgs::GPSDataPtr GPSData_;
+    asctec_msgs::GPSDataAdvancedPtr GPSDataAdvanced_;
+
+    ros::NodeHandle nh_;
     //asctec_msgs::CtrlInput CtrlInput_;
     bool estop_;
     

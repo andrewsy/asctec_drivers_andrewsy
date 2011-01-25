@@ -39,6 +39,8 @@
 #include "asctec_autopilot/telemetry.h"
 #include "asctec_autopilot/serialinterface.h"
 
+const std::string publish_namespace_ = "asctec_raw";
+
 namespace asctec
 {
   class AutoPilot
@@ -46,6 +48,8 @@ namespace asctec
     private:
 
       ros::Timer timer_;
+      ros::NodeHandle nh_;
+      ros::NodeHandle nh_private_;
     
       double freq_;
       std::string port_;
@@ -75,7 +79,6 @@ namespace asctec
       int interval_CONTROL_;
       int offset_CONTROL_;
 
-
       SerialInterface* serialInterface_;
       Telemetry* telemetry_;
 
@@ -87,7 +90,7 @@ namespace asctec
 
     public:
 
-      AutoPilot ();
+      AutoPilot (ros::NodeHandle nh, ros::NodeHandle nh_private);
       virtual ~AutoPilot();
 
       void enablePolling (uint16_t request, uint16_t interval);

@@ -21,29 +21,23 @@
 
 #include "asctec_proc/asctec_proc.h"
 
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "AsctecProc");
-  asctec::AsctecProc asctecProc;
-  ros::spin();
-	return 0;
-}
-
 namespace asctec
 {
 
-AsctecProc::AsctecProc()
+AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
+  nh_(nh), 
+  nh_private_(nh_private)
 {
   ROS_INFO("Starting AsctecProc"); 
 
-  ros::NodeHandle nh_private("~");
-  ros::NodeHandle nh;
+  ros::NodeHandle nh_publish  (nh_, publish_namespace_);
+  ros::NodeHandle nh_subscribe(nh_, subscribe_namespace_);
 
-  imuCalcDataSubscriber_ = nh.subscribe(imuCalcDataTopic_, 10,  &AsctecProc::imuCalcDataCallback, this);
+  imuCalcDataSubscriber_ = nh_subscribe.subscribe(imuCalcDataTopic_, 10,  &AsctecProc::imuCalcDataCallback, this);
 
-  imuPublisher_    = nh_private.advertise<sensor_msgs::Imu>(imuTopic_, 10);
-  heightPublisher_ = nh_private.advertise<asctec_msgs::Height>(heightTopic_, 10);
-  heightFilteredPublisher_ = nh_private.advertise<asctec_msgs::Height>(heightFilteredTopic_, 10);
+  imuPublisher_    = nh_publish.advertise<sensor_msgs::Imu>(imuTopic_, 10);
+  heightPublisher_ = nh_publish.advertise<asctec_msgs::Height>(heightTopic_, 10);
+  heightFilteredPublisher_ = nh_publish.advertise<asctec_msgs::Height>(heightFilteredTopic_, 10);
 }
 
 AsctecProc::~AsctecProc()
@@ -55,17 +49,17 @@ AsctecProc::~AsctecProc()
 void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg)
 {
   // publish imu message
-  sensor_msgs::Imu imuMsg;
+  sensor_msgs::ImuPtr imuMsg = boost::make_shared<sensor_msgs::Imu>();
   createImuMsg (imuCalcDataMsg, imuMsg);
   imuPublisher_.publish(imuMsg);
 
   // publish unfiltered height message
-  asctec_msgs::Height heightMsg;
+  asctec_msgs::HeightPtr heightMsg = boost::make_shared<asctec_msgs::Height>();
   createHeightMsg (imuCalcDataMsg, heightMsg);
   heightPublisher_.publish(heightMsg);
 
   // publish filtered height message
-  asctec_msgs::Height heightFilteredMsg;
+  asctec_msgs::HeightPtr heightFilteredMsg = boost::make_shared<asctec_msgs::Height>();
   createHeightFilteredMsg (imuCalcDataMsg, heightFilteredMsg);
   heightFilteredPublisher_.publish(heightFilteredMsg);
 
@@ -74,15 +68,12 @@ void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu
                             imuCalcDataMsg->angle_nick * ASC_TO_ROS_ANGLE,
                             imuCalcDataMsg->angle_yaw  * ASC_TO_ROS_ANGLE);
 */
-  // publish tf for testing
 
+/* //publish tf for testing
 
   btTransform t;
 
   btQuaternion orientation;
-//  orientation.setRPY(imuCalcDataMsg->angle_roll * ASC_TO_ROS_ANGLE,
-//                     imuCalcDataMsg->angle_nick * ASC_TO_ROS_ANGLE,
-//                     imuCalcDataMsg->angle_yaw  * ASC_TO_ROS_ANGLE);
 
   orientation.setValue(imuMsg.orientation.x, imuMsg.orientation.y, imuMsg.orientation.z, imuMsg.orientation.w);
   t.setRotation (orientation);
@@ -90,69 +81,72 @@ void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu
 
   tf::StampedTransform worldToOdomTf (t, ros::Time::now(), "navigation", "imu_raw");
   tfBroadcaster_.sendTransform (worldToOdomTf);
-
+*/
 }
 
 void AsctecProc::createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                       asctec_msgs::Height& heightMsg)
+                                       asctec_msgs::HeightPtr& heightMsg)
 {
   // set header info
-  heightMsg.header.stamp    = imuCalcDataMsg->header.stamp; //ros::Time::now();
-  heightMsg.header.frame_id = "imu";             // the frame seems arbitrary here
+  heightMsg->header.stamp    = imuCalcDataMsg->header.stamp;
+  heightMsg->header.frame_id = "imu";             // the frame seems arbitrary here
 
-  heightMsg.height = imuCalcDataMsg->height_reference  * ASC_TO_ROS_HEIGHT;
-  heightMsg.climb  = imuCalcDataMsg->dheight_reference * ASC_TO_ROS_HEIGHT;   
+  heightMsg->height = imuCalcDataMsg->height_reference  * ASC_TO_ROS_HEIGHT;
+  heightMsg->climb  = imuCalcDataMsg->dheight_reference * ASC_TO_ROS_HEIGHT;   
 }
 
 void AsctecProc::createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                               asctec_msgs::Height& heightMsg)
+                                               asctec_msgs::HeightPtr& heightMsg)
 {
   // set header info
-  heightMsg.header.stamp    = imuCalcDataMsg->header.stamp; //ros::Time::now();
-  heightMsg.header.frame_id = "imu";             // the frame seems arbitrary here
+  heightMsg->header.stamp    = imuCalcDataMsg->header.stamp;
+  heightMsg->header.frame_id = "imu";             // the frame seems arbitrary here
 
-  heightMsg.height = imuCalcDataMsg->height  * ASC_TO_ROS_HEIGHT;
-  heightMsg.climb  = imuCalcDataMsg->dheight * ASC_TO_ROS_HEIGHT;   
+  heightMsg->height = imuCalcDataMsg->height  * ASC_TO_ROS_HEIGHT;
+  heightMsg->climb  = imuCalcDataMsg->dheight * ASC_TO_ROS_HEIGHT;   
 }
 
 void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                    sensor_msgs::Imu& imuMsg)
+                                    sensor_msgs::ImuPtr& imuMsg)
 {
   // set header info
-  imuMsg.header.stamp    = imuCalcDataMsg->header.stamp; //ros::Time::now();
-  imuMsg.header.frame_id = "imu";
+  imuMsg->header.stamp    = imuCalcDataMsg->header.stamp;
+  imuMsg->header.frame_id = "imu";
 
   // copy over linear acceleration
-  imuMsg.linear_acceleration.x = imuCalcDataMsg->acc_x_calib * ASC_TO_ROS_ACC;
-  imuMsg.linear_acceleration.y = imuCalcDataMsg->acc_y_calib * ASC_TO_ROS_ACC;
-  imuMsg.linear_acceleration.z = imuCalcDataMsg->acc_z_calib * ASC_TO_ROS_ACC;
+  imuMsg->linear_acceleration.x = imuCalcDataMsg->acc_x_calib * ASC_TO_ROS_ACC;
+  imuMsg->linear_acceleration.y = imuCalcDataMsg->acc_y_calib * ASC_TO_ROS_ACC;
+  imuMsg->linear_acceleration.z = imuCalcDataMsg->acc_z_calib * ASC_TO_ROS_ACC;
 
+/* // Uncomment these if you use covariances
   // define linear acceleration variance
-  imuMsg.linear_acceleration_covariance[0] = 1.0;
-  imuMsg.linear_acceleration_covariance[1] = 0.0;
-  imuMsg.linear_acceleration_covariance[2] = 0.0;
-  imuMsg.linear_acceleration_covariance[3] = 0.0;
-  imuMsg.linear_acceleration_covariance[4] = 1.0;
-  imuMsg.linear_acceleration_covariance[5] = 0.0;
-  imuMsg.linear_acceleration_covariance[6] = 0.0;
-  imuMsg.linear_acceleration_covariance[7] = 0.0;
-  imuMsg.linear_acceleration_covariance[8] = 1.0;
-
+  imuMsg->linear_acceleration_covariance[0] = 1.0;
+  imuMsg->linear_acceleration_covariance[1] = 0.0;
+  imuMsg->linear_acceleration_covariance[2] = 0.0;
+  imuMsg->linear_acceleration_covariance[3] = 0.0;
+  imuMsg->linear_acceleration_covariance[4] = 1.0;
+  imuMsg->linear_acceleration_covariance[5] = 0.0;
+  imuMsg->linear_acceleration_covariance[6] = 0.0;
+  imuMsg->linear_acceleration_covariance[7] = 0.0;
+  imuMsg->linear_acceleration_covariance[8] = 1.0;
+*/
   // copy over angular_velocity
-  imuMsg.angular_velocity.x = imuCalcDataMsg->angvel_roll * ASC_TO_ROS_ANGVEL * -1.0;
-  imuMsg.angular_velocity.y = imuCalcDataMsg->angvel_nick * ASC_TO_ROS_ANGVEL;
-  imuMsg.angular_velocity.z = imuCalcDataMsg->angvel_yaw  * ASC_TO_ROS_ANGVEL * -1.0; 
+  imuMsg->angular_velocity.x = imuCalcDataMsg->angvel_roll * ASC_TO_ROS_ANGVEL * -1.0;
+  imuMsg->angular_velocity.y = imuCalcDataMsg->angvel_nick * ASC_TO_ROS_ANGVEL;
+  imuMsg->angular_velocity.z = imuCalcDataMsg->angvel_yaw  * ASC_TO_ROS_ANGVEL * -1.0; 
 
+/* // Uncomment these if you use covariances
   // define angular_velocity variance
-  imuMsg.angular_velocity_covariance[0] = 1.0;
-  imuMsg.angular_velocity_covariance[1] = 0.0;
-  imuMsg.angular_velocity_covariance[2] = 0.0;
-  imuMsg.angular_velocity_covariance[3] = 0.0;
-  imuMsg.angular_velocity_covariance[4] = 1.0;
-  imuMsg.angular_velocity_covariance[5] = 0.0;
-  imuMsg.angular_velocity_covariance[6] = 0.0;
-  imuMsg.angular_velocity_covariance[7] = 0.0;
-  imuMsg.angular_velocity_covariance[8] = 1.0;
+  imuMsg->angular_velocity_covariance[0] = 1.0;
+  imuMsg->angular_velocity_covariance[1] = 0.0;
+  imuMsg->angular_velocity_covariance[2] = 0.0;
+  imuMsg->angular_velocity_covariance[3] = 0.0;
+  imuMsg->angular_velocity_covariance[4] = 1.0;
+  imuMsg->angular_velocity_covariance[5] = 0.0;
+  imuMsg->angular_velocity_covariance[6] = 0.0;
+  imuMsg->angular_velocity_covariance[7] = 0.0;
+  imuMsg->angular_velocity_covariance[8] = 1.0;
+*/
 
   // calculate quaternion orientation
   btQuaternion orientation;
@@ -160,10 +154,10 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDat
                      imuCalcDataMsg->angle_nick * ASC_TO_ROS_ANGLE,
                      imuCalcDataMsg->angle_yaw  * ASC_TO_ROS_ANGLE * -1.0);
 
-  imuMsg.orientation.x = orientation.getX();
-  imuMsg.orientation.y = orientation.getY();
-  imuMsg.orientation.z = orientation.getZ();
-  imuMsg.orientation.w = orientation.getW();
+  imuMsg->orientation.x = orientation.getX();
+  imuMsg->orientation.y = orientation.getY();
+  imuMsg->orientation.z = orientation.getZ();
+  imuMsg->orientation.w = orientation.getW();
 }
 
 } // end namespace asctec
