@@ -30,20 +30,53 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
 {
   ROS_INFO("Starting AsctecProc"); 
 
-  ros::NodeHandle nh_publish  (nh_, publish_namespace_);
-  ros::NodeHandle nh_subscribe(nh_, subscribe_namespace_);
+  ros::NodeHandle nh_rawdata  (nh_, rawdata_namespace_);
+  ros::NodeHandle nh_procdata (nh_, procdata_namespace_);
 
-  imuCalcDataSubscriber_ = nh_subscribe.subscribe(imuCalcDataTopic_, 10,  &AsctecProc::imuCalcDataCallback, this);
+  // **** initialize ctrl_input_msg_
 
-  imuPublisher_    = nh_publish.advertise<sensor_msgs::Imu>(imuTopic_, 10);
-  heightPublisher_ = nh_publish.advertise<asctec_msgs::Height>(heightTopic_, 10);
-  heightFilteredPublisher_ = nh_publish.advertise<asctec_msgs::Height>(heightFilteredTopic_, 10);
+  ctrl_input_msg_.roll  = 0;
+  ctrl_input_msg_.pitch = 0;
+  ctrl_input_msg_.yaw   = 0;
+  ctrl_input_msg_.ctrl  = int(0b1000); // FIXME - where did this come from? use a const/define, move to header
+  
+  // **** register subscribers
+
+  imuCalcDataSubscriber_ = nh_rawdata.subscribe(imuCalcDataTopic_, 10,  &AsctecProc::imuCalcDataCallback, this);
+
+  cmd_thrust_subscriber_ = nh_procdata.subscribe(cmd_thrust_topic_, 1, &AsctecProc::cmdThrustCallback, this);
+
+  // *** register publishers
+
+  imuPublisher_    = nh_procdata.advertise<sensor_msgs::Imu>(imuTopic_, 10);
+  heightPublisher_ = nh_procdata.advertise<asctec_msgs::Height>(heightTopic_, 10);
+  heightFilteredPublisher_ = nh_procdata.advertise<asctec_msgs::Height>(heightFilteredTopic_, 10);
+
+  ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(ctrl_input_topic_, 10);
 }
 
 AsctecProc::~AsctecProc()
 {
   ROS_INFO("Destroying AsctecProc"); 
 
+}
+
+void AsctecProc::cmdThrustCallback(const std_msgs::Float32ConstPtr& cmd_thrust)
+{
+  ROS_INFO ("Thrust received");
+
+  // translate from thrust_cmd [0.0 to 100.0] to thrust_ctrl [0 to 4091],
+  int ctrl_thrust = (int)(cmd_thrust->data * ROS_TO_ASC_THRUST);
+
+  // update thrust, checksum and timestamp, and publish
+  boost::mutex::scoped_lock(ctrl_mutex_);
+
+  ctrl_input_msg_.thrust = ctrl_thrust;
+  ctrl_input_msg_.chksum = ctrl_input_msg_.roll + ctrl_input_msg_.pitch  + 
+                           ctrl_input_msg_.yaw  + ctrl_input_msg_.thrust + 
+                           ctrl_input_msg_.ctrl - 21846;
+  ctrl_input_msg_.header.stamp = ros::Time::now();
+  ctrl_input_publisher_.publish(ctrl_input_msg_);
 }
 
 void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg)

@@ -39,7 +39,7 @@
 #include "asctec_autopilot/telemetry.h"
 #include "asctec_autopilot/serialinterface.h"
 
-const std::string publish_namespace_ = "asctec_raw";
+const std::string rawdata_namespace_ = "asctec_raw";
 
 namespace asctec
 {

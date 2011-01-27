@@ -12,6 +12,7 @@
   <depend package="nodelet"/>
   <depend package="asctec_msgs"/>
   <depend package="sensor_msgs"/>
+  <depend package="std_msgs"/>
   <depend package="tf"/>
 
   <export>

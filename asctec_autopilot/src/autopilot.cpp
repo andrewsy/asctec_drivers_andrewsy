@@ -104,8 +104,8 @@ namespace asctec
     serialInterface_->serialport_bytes_rx_ = 0;
     serialInterface_->serialport_bytes_tx_ = 0;
 
-    ros::NodeHandle nh_publish(nh_, publish_namespace_);    // publish to "asctec_raw" namespace"
-    telemetry_ = new asctec::Telemetry::Telemetry(nh_publish);
+    ros::NodeHandle nh_rawdata(nh_, rawdata_namespace_);    // publish to "asctec_raw" namespace"
+    telemetry_ = new asctec::Telemetry::Telemetry(nh_rawdata);
 
     // Diagnostics
     diag_updater_.add("AscTec Autopilot Status", this, &AutoPilot::diagnostics);
