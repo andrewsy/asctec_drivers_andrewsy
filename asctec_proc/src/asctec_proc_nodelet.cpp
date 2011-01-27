@@ -36,5 +36,5 @@ void asctec::AsctecProcNodelet::onInit ()
   ros::NodeHandle nh         = getMTNodeHandle();
   ros::NodeHandle nh_private = getMTPrivateNodeHandle();
 
-  proc = new asctec::AsctecProc(nh, nh_private);  
+  proc_ = new asctec::AsctecProc(nh, nh_private);  
 }

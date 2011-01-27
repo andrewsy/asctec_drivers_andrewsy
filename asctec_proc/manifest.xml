@@ -19,7 +19,6 @@
     <nodelet plugin="${prefix}/asctec_proc_nodelet.xml" />
   </export>
 
-
 </package>
 
 

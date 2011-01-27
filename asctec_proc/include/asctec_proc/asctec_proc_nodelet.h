@@ -35,7 +35,7 @@ namespace asctec
       virtual void onInit ();
 
     private:
-      asctec::AsctecProc * proc;  // FIXME: change to smart pointer
+      asctec::AsctecProc * proc_;  // FIXME: change to smart pointer
   };
 }
 
