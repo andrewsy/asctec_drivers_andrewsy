@@ -76,12 +76,12 @@ void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg
 
 void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
 {
-  ROS_INFO ("Yaw received");
+  //ROS_INFO ("Yaw received");
 
   // translate from cmd_yaw [-1.0 to 1.0] to ctrl_yaw [-2047 .. 2047],
   int ctrl_yaw = (int)(cmd_yaw->data * ROS_TO_ASC_YAW);
 
-  ROS_INFO ("CTRL_Yaw: %d", ctrl_yaw);
+  ROS_INFO ("\t\tCTRL_Yaw received: %d", ctrl_yaw);
 
   // update thrust, checksum and timestamp, and publish
   boost::mutex::scoped_lock(ctrl_mutex_);
@@ -97,12 +97,12 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
 
 void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
 {
-  ROS_INFO ("Thrust received");
+  //ROS_INFO ("Thrust received");
 
   // translate from cmd_thrust [0.0 to 100.0] to ctrl_thrust [0 to 4091],
   int ctrl_thrust = (int)(cmd_thrust->data * ROS_TO_ASC_THRUST);
 
-  ROS_INFO ("CTRL_Thrust: %d", ctrl_thrust);
+  ROS_INFO ("\t\tCTRL_Thrust received: %d", ctrl_thrust);
 
   // update thrust, checksum and timestamp, and publish
   boost::mutex::scoped_lock(ctrl_mutex_);
