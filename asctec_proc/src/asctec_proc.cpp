@@ -233,7 +233,7 @@ void AsctecProc::engageMotors()
   // set the stick to lower left, wait for motors to engage, 
   // and reset stick
 
-  ROS_DEBUG ("\t\tEngaging motors...");
+  ROS_DEBUG ("\tEngaging motors...");
 
   boost::mutex::scoped_lock(ctrl_mutex_);
 
@@ -253,7 +253,7 @@ void AsctecProc::engageMotors()
   ctrl_input_msg_->yaw = 0;
   publishCtrlInputMsg();
 
-  ROS_DEBUG("\t\Done engaging motors.");
+  ROS_DEBUG("\tDone engaging motors.");
 }
 
 void AsctecProc::disengageMotors()
@@ -261,7 +261,7 @@ void AsctecProc::disengageMotors()
   // set the stick to lower left, wait for motors to disengage, 
   // and reset stick
 
-  ROS_DEBUG ("\t\tDisengaging motors...");
+  ROS_DEBUG ("\tDisengaging motors...");
 
   boost::mutex::scoped_lock(ctrl_mutex_);
 
@@ -281,7 +281,7 @@ void AsctecProc::disengageMotors()
   ctrl_input_msg_->yaw = 0;
   publishCtrlInputMsg();
 
-  ROS_DEBUG("\t\tDone disengaging motors.");
+  ROS_DEBUG("\tDone disengaging motors.");
 }
 
 void AsctecProc::publishCtrlInputMsg()
