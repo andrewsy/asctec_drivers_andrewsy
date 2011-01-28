@@ -38,13 +38,14 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   ctrl_input_msg_.roll  = 0;
   ctrl_input_msg_.pitch = 0;
   ctrl_input_msg_.yaw   = 0;
-  ctrl_input_msg_.ctrl  = int(0b1000); // FIXME - where did this come from? use a const/define, move to header
+  ctrl_input_msg_.ctrl  = int(0b1100); // FIXME This is from CtrlInput.msg- use a param
   
   // **** register subscribers
 
   imuCalcDataSubscriber_ = nh_rawdata.subscribe(imuCalcDataTopic_, 10, &AsctecProc::imuCalcDataCallback, this);
 
   cmd_thrust_subscriber_ = nh_procdata.subscribe(cmd_thrust_topic_, 1, &AsctecProc::cmdThrustCallback, this);
+  cmd_yaw_subscriber_    = nh_procdata.subscribe(cmd_yaw_topic_,    1, &AsctecProc::cmdYawCallback,    this);
 
   // *** register publishers
 
@@ -61,11 +62,33 @@ AsctecProc::~AsctecProc()
 
 }
 
+
+void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
+{
+  ROS_INFO ("Yaw received");
+
+  // translate from cmd_yaw [-1.0 to 1.0] to ctrl_yaw [-2047 .. 2047],
+  int ctrl_yaw = (int)(cmd_yaw->data * ROS_TO_ASC_YAW);
+
+  ROS_INFO ("CTRL_Yaw: %d", ctrl_yaw);
+
+  // update thrust, checksum and timestamp, and publish
+  boost::mutex::scoped_lock(ctrl_mutex_);
+
+  ctrl_input_msg_.yaw = ctrl_yaw;
+  ctrl_input_msg_.chksum = ctrl_input_msg_.roll + ctrl_input_msg_.pitch  + 
+                           ctrl_input_msg_.yaw  + ctrl_input_msg_.thrust + 
+                           ctrl_input_msg_.ctrl - 21846;
+  ctrl_input_msg_.header.stamp = ros::Time::now();
+  ctrl_input_publisher_.publish(ctrl_input_msg_);
+}
+
+
 void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
 {
   ROS_INFO ("Thrust received");
 
-  // translate from thrust_cmd [0.0 to 100.0] to thrust_ctrl [0 to 4091],
+  // translate from cmd_thrust [0.0 to 100.0] to ctrl_thrust [0 to 4091],
   int ctrl_thrust = (int)(cmd_thrust->data * ROS_TO_ASC_THRUST);
 
   ROS_INFO ("CTRL_Thrust: %d", ctrl_thrust);

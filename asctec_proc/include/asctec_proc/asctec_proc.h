@@ -14,6 +14,7 @@ const std::string rawdata_namespace_    = "asctec";
 const std::string procdata_namespace_   = "mav";
 
 const std::string cmd_thrust_topic_    = "cmd_thrust";
+const std::string cmd_yaw_topic_       = "cmd_yaw";
 
 const std::string ctrl_input_topic_    = "CTRL_INPUT";
 
@@ -27,8 +28,9 @@ const double ASC_TO_ROS_ANGVEL = (1.0 /    64.8) * 3.14159265 / 180.0; // convet
 const double ASC_TO_ROS_ACC    = (1.0 / 10000.0) * 9.81;               // converts to m/s^s
 const double ASC_TO_ROS_HEIGHT = (1.0 /  1000.0);                      // converts to m
 
-// TODO: verify these
+// from asctec CtrlInput definitions
 const double ROS_TO_ASC_THRUST = (4095 / 100.0);      // convertrs from % to thrust counts
+const double ROS_TO_ASC_YAW    = 2047.0;              // converts from [-1, 1] to yaw counts
 
 namespace asctec
 {
@@ -40,6 +42,7 @@ class AsctecProc
     ros::NodeHandle nh_private_;
 
     ros::Subscriber cmd_thrust_subscriber_;
+    ros::Subscriber cmd_yaw_subscriber_;
 
     ros::Subscriber imuCalcDataSubscriber_;
     ros::Publisher  imuPublisher_;
@@ -53,6 +56,7 @@ class AsctecProc
     asctec_msgs::CtrlInput ctrl_input_msg_;
 
     void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust);
+    void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw);
 
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg);
 
