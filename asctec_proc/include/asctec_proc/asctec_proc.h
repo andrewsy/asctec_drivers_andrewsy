@@ -61,6 +61,7 @@ class AsctecProc
     ros::Publisher  ctrl_input_publisher_;
 
     ros::Subscriber  state_subscriber_;
+    ros::Subscriber  estop_subscriber_;
 
     tf::TransformBroadcaster tfBroadcaster_;
 
