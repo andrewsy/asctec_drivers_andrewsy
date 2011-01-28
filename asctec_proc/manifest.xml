@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/asctec_proc</url>
   <depend package="roscpp"/>
   <depend package="nodelet"/>
+  <depend package="mav_msgs"/>
   <depend package="asctec_msgs"/>
   <depend package="sensor_msgs"/>
   <depend package="std_msgs"/>

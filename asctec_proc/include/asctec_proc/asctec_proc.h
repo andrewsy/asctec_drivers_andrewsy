@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
+#include <mav_msgs/State.h>
 #include <asctec_msgs/IMUCalcData.h>
 #include <sensor_msgs/Imu.h>
 #include <asctec_msgs/Height.h>
@@ -26,7 +27,7 @@ const std::string imuTopic_            = "imu";
 const std::string heightTopic_         = "pressure_height";
 const std::string heightFilteredTopic_ = "pressure_height_filtered";
 
-const std::string engaged_topic_       = "engaged";
+const std::string state_topic_       = "state";
 
 const double ASC_TO_ROS_ANGLE  = (1.0 /  1000.0) * 3.14159265 / 180.0; // converts to rad
 const double ASC_TO_ROS_ANGVEL = (1.0 /    64.8) * 3.14159265 / 180.0; // convetts to rad/s
@@ -36,6 +37,8 @@ const double ASC_TO_ROS_HEIGHT = (1.0 /  1000.0);                      // conver
 // from asctec CtrlInput definitions
 const double ROS_TO_ASC_THRUST = (4095 / 100.0);      // convertrs from % to thrust counts
 const double ROS_TO_ASC_YAW    = 2047.0;              // converts from [-1, 1] to yaw counts
+
+enum MAVState {OFF = 0, IDLE = 1, FLYING = 2};
 
 namespace asctec
 {
@@ -57,19 +60,22 @@ class AsctecProc
     ros::Publisher  heightFilteredPublisher_;
     ros::Publisher  ctrl_input_publisher_;
 
-    ros::Publisher  engaged_publisher_;
+    ros::Subscriber  state_subscriber_;
 
     tf::TransformBroadcaster tfBroadcaster_;
 
     boost::mutex ctrl_mutex_;
     asctec_msgs::CtrlInputPtr ctrl_input_msg_;
 
-    boost::mutex engaged_mutex_;
-    std_msgs::BoolPtr engaged_msg_;
+    bool engaged_;
+    int prev_state_;
 
     void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust);
     void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw);
+    void stateCallback    (const mav_msgs::StatePtr&        state_msg);
+
     void llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg);
+
 
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg);
 
@@ -81,6 +87,10 @@ class AsctecProc
 
     void createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
                                        asctec_msgs::HeightPtr& heightMsg);
+
+    void engageMotors();
+    void disengageMotors();
+    void publishCtrlInputMsg();
 
   public:
 
