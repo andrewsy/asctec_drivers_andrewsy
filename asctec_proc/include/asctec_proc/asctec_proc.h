@@ -3,10 +3,12 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 #include <asctec_msgs/IMUCalcData.h>
 #include <sensor_msgs/Imu.h>
 #include <asctec_msgs/Height.h>
 #include <asctec_msgs/CtrlInput.h>
+#include <asctec_msgs/LLStatus.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 
@@ -17,11 +19,14 @@ const std::string cmd_thrust_topic_    = "cmd_thrust";
 const std::string cmd_yaw_topic_       = "cmd_yaw";
 
 const std::string ctrl_input_topic_    = "CTRL_INPUT";
+const std::string ll_status_topic_     = "LL_STATUS";
 
 const std::string imuCalcDataTopic_    = "IMU_CALCDATA";
 const std::string imuTopic_            = "imu";
 const std::string heightTopic_         = "pressure_height";
 const std::string heightFilteredTopic_ = "pressure_height_filtered";
+
+const std::string engaged_topic_       = "engaged";
 
 const double ASC_TO_ROS_ANGLE  = (1.0 /  1000.0) * 3.14159265 / 180.0; // converts to rad
 const double ASC_TO_ROS_ANGVEL = (1.0 /    64.8) * 3.14159265 / 180.0; // convetts to rad/s
@@ -44,19 +49,27 @@ class AsctecProc
     ros::Subscriber cmd_thrust_subscriber_;
     ros::Subscriber cmd_yaw_subscriber_;
 
+    ros::Subscriber ll_status_subscriber_;
+
     ros::Subscriber imuCalcDataSubscriber_;
     ros::Publisher  imuPublisher_;
     ros::Publisher  heightPublisher_;
     ros::Publisher  heightFilteredPublisher_;
     ros::Publisher  ctrl_input_publisher_;
 
+    ros::Publisher  engaged_publisher_;
+
     tf::TransformBroadcaster tfBroadcaster_;
 
     boost::mutex ctrl_mutex_;
-    asctec_msgs::CtrlInput ctrl_input_msg_;
+    asctec_msgs::CtrlInputPtr ctrl_input_msg_;
+
+    boost::mutex engaged_mutex_;
+    std_msgs::BoolPtr engaged_msg_;
 
     void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust);
     void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw);
+    void llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg);
 
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg);
 

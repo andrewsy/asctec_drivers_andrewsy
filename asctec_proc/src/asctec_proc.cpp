@@ -33,25 +33,31 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   ros::NodeHandle nh_rawdata  (nh_, rawdata_namespace_);
   ros::NodeHandle nh_procdata (nh_, procdata_namespace_);
 
-  // **** initialize ctrl_input_msg_
+  // **** initialize vaiables
 
-  ctrl_input_msg_.roll  = 0;
-  ctrl_input_msg_.pitch = 0;
-  ctrl_input_msg_.yaw   = 0;
-  ctrl_input_msg_.ctrl  = int(0b1100); // FIXME This is from CtrlInput.msg- use a param
+  engaged_msg_ = boost::make_shared<std_msgs::Bool>();
+
+  ctrl_input_msg_ = boost::make_shared<asctec_msgs::CtrlInput>();
+
+  ctrl_input_msg_->roll  = 0;
+  ctrl_input_msg_->pitch = 0;
+  ctrl_input_msg_->yaw   = 0;
+  ctrl_input_msg_->ctrl  = int(0b1100); // FIXME This is from CtrlInput.msg - use a param
   
   // **** register subscribers
 
   imuCalcDataSubscriber_ = nh_rawdata.subscribe(imuCalcDataTopic_, 10, &AsctecProc::imuCalcDataCallback, this);
+  ll_status_subscriber_  = nh_rawdata.subscribe(ll_status_topic_,   1, &AsctecProc::llStatusCallback,    this);
 
   cmd_thrust_subscriber_ = nh_procdata.subscribe(cmd_thrust_topic_, 1, &AsctecProc::cmdThrustCallback, this);
   cmd_yaw_subscriber_    = nh_procdata.subscribe(cmd_yaw_topic_,    1, &AsctecProc::cmdYawCallback,    this);
 
   // *** register publishers
 
-  imuPublisher_    = nh_procdata.advertise<sensor_msgs::Imu>(imuTopic_, 10);
-  heightPublisher_ = nh_procdata.advertise<asctec_msgs::Height>(heightTopic_, 10);
+  imuPublisher_            = nh_procdata.advertise<sensor_msgs::Imu>(imuTopic_, 10);
+  heightPublisher_         = nh_procdata.advertise<asctec_msgs::Height>(heightTopic_, 10);
   heightFilteredPublisher_ = nh_procdata.advertise<asctec_msgs::Height>(heightFilteredTopic_, 10);
+  engaged_publisher_       = nh_procdata.advertise<std_msgs::Bool>(engaged_topic_,1);
 
   ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(ctrl_input_topic_, 10);
 }
@@ -62,6 +68,11 @@ AsctecProc::~AsctecProc()
 
 }
 
+void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
+{
+  engaged_msg_->data = ll_status_msg->flying;
+  engaged_publisher_.publish(engaged_msg_);
+}
 
 void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
 {
@@ -75,11 +86,11 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
   // update thrust, checksum and timestamp, and publish
   boost::mutex::scoped_lock(ctrl_mutex_);
 
-  ctrl_input_msg_.yaw = ctrl_yaw;
-  ctrl_input_msg_.chksum = ctrl_input_msg_.roll + ctrl_input_msg_.pitch  + 
-                           ctrl_input_msg_.yaw  + ctrl_input_msg_.thrust + 
-                           ctrl_input_msg_.ctrl - 21846;
-  ctrl_input_msg_.header.stamp = ros::Time::now();
+  ctrl_input_msg_->yaw = ctrl_yaw;
+  ctrl_input_msg_->chksum = ctrl_input_msg_->roll + ctrl_input_msg_->pitch  + 
+                            ctrl_input_msg_->yaw  + ctrl_input_msg_->thrust + 
+                            ctrl_input_msg_->ctrl - 21846;
+  ctrl_input_msg_->header.stamp = ros::Time::now();
   ctrl_input_publisher_.publish(ctrl_input_msg_);
 }
 
@@ -96,11 +107,11 @@ void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
   // update thrust, checksum and timestamp, and publish
   boost::mutex::scoped_lock(ctrl_mutex_);
 
-  ctrl_input_msg_.thrust = ctrl_thrust;
-  ctrl_input_msg_.chksum = ctrl_input_msg_.roll + ctrl_input_msg_.pitch  + 
-                           ctrl_input_msg_.yaw  + ctrl_input_msg_.thrust + 
-                           ctrl_input_msg_.ctrl - 21846;
-  ctrl_input_msg_.header.stamp = ros::Time::now();
+  ctrl_input_msg_->thrust = ctrl_thrust;
+  ctrl_input_msg_->chksum = ctrl_input_msg_->roll + ctrl_input_msg_->pitch  + 
+                            ctrl_input_msg_->yaw  + ctrl_input_msg_->thrust + 
+                            ctrl_input_msg_->ctrl - 21846;
+  ctrl_input_msg_->header.stamp = ros::Time::now();
   ctrl_input_publisher_.publish(ctrl_input_msg_);
 }
 
