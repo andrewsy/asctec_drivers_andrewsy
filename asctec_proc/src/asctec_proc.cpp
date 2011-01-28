@@ -42,7 +42,7 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   
   // **** register subscribers
 
-  imuCalcDataSubscriber_ = nh_rawdata.subscribe(imuCalcDataTopic_, 10,  &AsctecProc::imuCalcDataCallback, this);
+  imuCalcDataSubscriber_ = nh_rawdata.subscribe(imuCalcDataTopic_, 10, &AsctecProc::imuCalcDataCallback, this);
 
   cmd_thrust_subscriber_ = nh_procdata.subscribe(cmd_thrust_topic_, 1, &AsctecProc::cmdThrustCallback, this);
 
@@ -61,12 +61,14 @@ AsctecProc::~AsctecProc()
 
 }
 
-void AsctecProc::cmdThrustCallback(const std_msgs::Float32ConstPtr& cmd_thrust)
+void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
 {
   ROS_INFO ("Thrust received");
 
   // translate from thrust_cmd [0.0 to 100.0] to thrust_ctrl [0 to 4091],
   int ctrl_thrust = (int)(cmd_thrust->data * ROS_TO_ASC_THRUST);
+
+  ROS_INFO ("CTRL_Thrust: %d", ctrl_thrust);
 
   // update thrust, checksum and timestamp, and publish
   boost::mutex::scoped_lock(ctrl_mutex_);

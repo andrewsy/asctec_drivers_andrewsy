@@ -1,10 +1,8 @@
 #ifndef ASCTEC_PROC_ASCTEC_PROC_H
 #define ASCTEC_PROC_ASCTEC_PROC_H
 
-
-
 #include <ros/ros.h>
-#include <std_msgs/Float32.h>
+#include <std_msgs/Float64.h>
 #include <asctec_msgs/IMUCalcData.h>
 #include <sensor_msgs/Imu.h>
 #include <asctec_msgs/Height.h>
@@ -12,8 +10,8 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 
-const std::string rawdata_namespace_    = "asctec_raw";
-const std::string procdata_namespace_   = "asctec_proc";
+const std::string rawdata_namespace_    = "asctec";
+const std::string procdata_namespace_   = "mav";
 
 const std::string cmd_thrust_topic_    = "cmd_thrust";
 
@@ -30,7 +28,7 @@ const double ASC_TO_ROS_ACC    = (1.0 / 10000.0) * 9.81;               // conver
 const double ASC_TO_ROS_HEIGHT = (1.0 /  1000.0);                      // converts to m
 
 // TODO: verify these
-const double ROS_TO_ASC_THRUST = (4091 / 100.0);      // converts from % to thrust counts
+const double ROS_TO_ASC_THRUST = (4095 / 100.0);      // convertrs from % to thrust counts
 
 namespace asctec
 {
@@ -54,7 +52,7 @@ class AsctecProc
     boost::mutex ctrl_mutex_;
     asctec_msgs::CtrlInput ctrl_input_msg_;
 
-    void cmdThrustCallback(const std_msgs::Float32ConstPtr& cmd_thrust);
+    void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust);
 
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg);
 
