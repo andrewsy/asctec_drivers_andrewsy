@@ -323,7 +323,7 @@ namespace asctec
     output(cmd, 5);
     if (!sent_estop_reported)
     {
-      ROS_INFO("Sent E-Stop command!");
+      ROS_WARN("Sent E-Stop command!");
       sent_estop_reported = true;
     }
   }

@@ -193,7 +193,7 @@ namespace asctec
     if (msg.data) {
       estop_ = true;
       if (!info_printed) {
-        ROS_INFO("Heard e-stop command!");
+        ROS_WARN("Heard e-stop command!");
         info_printed = true;
       }
     } else {
