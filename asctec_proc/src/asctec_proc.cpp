@@ -286,6 +286,8 @@ void AsctecProc::disengageMotors()
 
 void AsctecProc::publishCtrlInputMsg()
 {
+  ROS_DEBUG("Publishing...");
+
   // update checksum and timestamp, and publish
   ctrl_input_msg_->chksum = ctrl_input_msg_->roll + ctrl_input_msg_->pitch  + 
                             ctrl_input_msg_->yaw  + ctrl_input_msg_->thrust + 
