@@ -156,8 +156,7 @@ void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
     ROS_WARN("ctrl_thrust of %d too big, clamping to %d!", ctrl_thrust, max_ctrl_thrust_);
     ctrl_thrust = max_ctrl_thrust_;
   }
-  else if
-  if (ctrl_thrust < 0)
+  else if (ctrl_thrust < 0)
   {
     ROS_WARN("ctrl_thrust of %d too small, clamping to 0!", ctrl_thrust);
     ctrl_thrust = 0;
