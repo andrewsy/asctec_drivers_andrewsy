@@ -35,8 +35,8 @@ const double ASC_TO_ROS_ACC    = (1.0 / 10000.0) * 9.81;               // conver
 const double ASC_TO_ROS_HEIGHT = (1.0 /  1000.0);                      // converts to m
 
 // from asctec CtrlInput definitions
-const double ROS_TO_ASC_THRUST = (4095 / 100.0);      // convertrs from % to thrust counts
-const double ROS_TO_ASC_YAW    = 2047.0;              // converts from [-1, 1] to yaw counts
+const double ROS_TO_ASC_THRUST = 4095.0;      // converts from [ 0, 1] to thrust counts
+const double ROS_TO_ASC_YAW    = 2047.0;      // converts from [-1, 1] to yaw counts
 
 enum MAVState {OFF = 0, IDLE = 1, FLYING = 2};
 
@@ -68,8 +68,26 @@ class AsctecProc
     boost::mutex ctrl_mutex_;
     asctec_msgs::CtrlInputPtr ctrl_input_msg_;
 
+    // **** parameters
+
+    bool enable_ctrl_thrust_;
+    bool enable_ctrl_roll_;
+    bool enable_ctrl_pitch_;
+    bool enable_ctrl_yaw_;
+
+    int max_ctrl_thrust_;   // max output - in asctec units
+    int max_ctrl_roll_; 
+    int max_ctrl_pitch_;
+    int max_ctrl_yaw_;
+
+    // **** state variables
+
     bool engaged_;
     int prev_state_;
+
+    // **** member functions
+
+    void initializeParams();
 
     void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust);
     void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw);

@@ -33,6 +33,10 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   ros::NodeHandle nh_rawdata  (nh_, rawdata_namespace_);
   ros::NodeHandle nh_procdata (nh_, procdata_namespace_);
 
+  // **** get parameters
+
+  initializeParams();
+
   // **** initialize vaiables
 
   engaged_ = false;
@@ -43,7 +47,12 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   ctrl_input_msg_->roll  = 0;
   ctrl_input_msg_->pitch = 0;
   ctrl_input_msg_->yaw   = 0;
-  ctrl_input_msg_->ctrl  = int(0b1100); // FIXME This is from CtrlInput.msg - use a param
+  ctrl_input_msg_->ctrl  = int(0b0000);
+
+  if (enable_ctrl_thrust_) ctrl_input_msg_->ctrl |= 0b1000; // FIXME These are from CtrlInput.msg 
+  if (enable_ctrl_yaw_)    ctrl_input_msg_->ctrl |= 0b0100;
+  if (enable_ctrl_roll_)   ctrl_input_msg_->ctrl |= 0b0010;
+  if (enable_ctrl_pitch_)  ctrl_input_msg_->ctrl |= 0b0001;
   
   // **** register subscribers
 
@@ -67,6 +76,27 @@ AsctecProc::~AsctecProc()
 {
   ROS_INFO("Destroying AsctecProc"); 
 
+}
+
+void AsctecProc::initializeParams()
+{
+  if (!nh_private_.getParam ("enable_ctrl_thrust", enable_ctrl_thrust_))
+    enable_ctrl_thrust_ = false;
+  if (!nh_private_.getParam ("enable_ctrl_pitch", enable_ctrl_pitch_))
+    enable_ctrl_pitch_ = false;
+  if (!nh_private_.getParam ("enable_ctrl_roll", enable_ctrl_roll_))
+    enable_ctrl_roll_ = false;
+  if (!nh_private_.getParam ("enable_ctrl_yaw", enable_ctrl_yaw_))
+    enable_ctrl_yaw_ = false;
+
+  if (!nh_private_.getParam ("max_ctrl_thrust", max_ctrl_thrust_))
+    max_ctrl_thrust_ = 2200;
+  if (!nh_private_.getParam ("max_ctrl_roll", max_ctrl_roll_))
+    max_ctrl_roll_ = 300;
+  if (!nh_private_.getParam ("max_ctrl_pitch", max_ctrl_pitch_))
+    max_ctrl_pitch_ = 300;
+  if (!nh_private_.getParam ("max_ctrl_yaw", max_ctrl_yaw_))
+    max_ctrl_yaw_ = 600;
 }
 
 void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
@@ -95,6 +125,18 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
 
   ROS_DEBUG ("\t\tCTRL_Yaw received: %d", ctrl_yaw);
 
+  // limit min/max output
+  if (ctrl_yaw > max_ctrl_yaw_)
+  {
+    ROS_WARN("ctrl_yaw of %d too big, clamping to %d!", ctrl_yaw, max_ctrl_yaw_);
+    ctrl_yaw = max_ctrl_yaw_;
+  }
+  else if (ctrl_yaw < -max_ctrl_yaw_)
+  {
+    ROS_WARN("ctrl_yaw of %d too small, clamping to -%d!", ctrl_yaw, -max_ctrl_yaw_);
+    ctrl_yaw = -max_ctrl_yaw_;
+  }
+
   // change yaw in message and publish
   boost::mutex::scoped_lock(ctrl_mutex_);
   ctrl_input_msg_->yaw = ctrl_yaw;
@@ -103,10 +145,17 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
 
 void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
 {
-  // translate from cmd_thrust [0.0 to 100.0] to ctrl_thrust [0 to 4091],
+  // translate from cmd_thrust [0.0 to 1.0] to ctrl_thrust [0 to 4095],
   int ctrl_thrust = (int)(cmd_thrust->data * ROS_TO_ASC_THRUST);
 
   ROS_DEBUG ("\t\tCTRL_Thrust received: %d", ctrl_thrust);
+
+  // limit max output
+  if (ctrl_thrust > max_ctrl_thrust_)
+  {
+    ROS_WARN("ctrl_thrust of %d too big, clamping to %d!", ctrl_thrust, max_ctrl_thrust_);
+    ctrl_thrust = max_ctrl_thrust_;
+  }
 
   // change thrust in message and publish
   boost::mutex::scoped_lock(ctrl_mutex_);
