@@ -56,7 +56,7 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   
   // **** register subscribers
 
-  imuCalcDataSubscriber_ = nh_rawdata.subscribe(imuCalcDataTopic_, 10, &AsctecProc::imuCalcDataCallback, this);
+  imuCalcDataSubscriber_ = nh_rawdata.subscribe(imu_calcdata_topic_, 10, &AsctecProc::imuCalcDataCallback, this);
   ll_status_subscriber_  = nh_rawdata.subscribe(ll_status_topic_,   1, &AsctecProc::llStatusCallback,    this);
 
   cmd_thrust_subscriber_ = nh_procdata.subscribe(cmd_thrust_topic_, 1, &AsctecProc::cmdThrustCallback, this);
@@ -65,9 +65,9 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
 
   // *** register publishers
 
-  imuPublisher_            = nh_procdata.advertise<sensor_msgs::Imu>(imuTopic_, 10);
-  heightPublisher_         = nh_procdata.advertise<mav_msgs::Height>(heightTopic_, 10);
-  heightFilteredPublisher_ = nh_procdata.advertise<mav_msgs::Height>(heightFilteredTopic_, 10);
+  imuPublisher_            = nh_procdata.advertise<sensor_msgs::Imu>(imu_topic_, 10);
+  heightPublisher_         = nh_procdata.advertise<mav_msgs::Height>(height_topic_, 10);
+  heightFilteredPublisher_ = nh_procdata.advertise<mav_msgs::Height>(height_filtered_topic_, 10);
 
   ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(ctrl_input_topic_, 10);
 }
@@ -123,7 +123,7 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
   // translate from cmd_yaw [-1.0 to 1.0] to ctrl_yaw [-2047 .. 2047],
   int ctrl_yaw = (int)(cmd_yaw->data * ROS_TO_ASC_YAW);
 
-  ROS_DEBUG ("\t\tCTRL_Yaw received: %d", ctrl_yaw);
+  ROS_DEBUG ("cmd_yaw received: %f (%d)", cmd_yaw->data, ctrl_yaw);
 
   // limit min/max output
   if (ctrl_yaw > max_ctrl_yaw_)
@@ -148,7 +148,7 @@ void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
   // translate from cmd_thrust [0.0 to 1.0] to ctrl_thrust [0 to 4095],
   int ctrl_thrust = (int)(cmd_thrust->data * ROS_TO_ASC_THRUST);
 
-  ROS_DEBUG ("\t\tCTRL_Thrust received: %d", ctrl_thrust);
+  ROS_DEBUG ("cmd_thrust received: %f (%d)", cmd_thrust->data, ctrl_thrust);
 
   // limit max output
   if (ctrl_thrust > max_ctrl_thrust_)
@@ -282,7 +282,7 @@ void AsctecProc::engageMotors()
   // set the stick to lower left, wait for motors to engage, 
   // and reset stick
 
-  ROS_DEBUG ("\tEngaging motors...");
+  ROS_DEBUG ("Engaging motors...");
 
   boost::mutex::scoped_lock(ctrl_mutex_);
 
@@ -302,7 +302,7 @@ void AsctecProc::engageMotors()
   ctrl_input_msg_->yaw = 0;
   publishCtrlInputMsg();
 
-  ROS_DEBUG("\tDone engaging motors.");
+  ROS_DEBUG("Done engaging motors.");
 }
 
 void AsctecProc::disengageMotors()
@@ -310,7 +310,7 @@ void AsctecProc::disengageMotors()
   // set the stick to lower left, wait for motors to disengage, 
   // and reset stick
 
-  ROS_DEBUG ("\tDisengaging motors...");
+  ROS_DEBUG ("Disengaging motors...");
 
   boost::mutex::scoped_lock(ctrl_mutex_);
 
@@ -330,12 +330,12 @@ void AsctecProc::disengageMotors()
   ctrl_input_msg_->yaw = 0;
   publishCtrlInputMsg();
 
-  ROS_DEBUG("\tDone disengaging motors.");
+  ROS_DEBUG("Done disengaging motors.");
 }
 
 void AsctecProc::publishCtrlInputMsg()
 {
-  ROS_DEBUG("Publishing...");
+  ROS_DEBUG("Publishing ctrl_input_msg");
 
   // update checksum and timestamp, and publish
   ctrl_input_msg_->chksum = ctrl_input_msg_->roll + ctrl_input_msg_->pitch  + 

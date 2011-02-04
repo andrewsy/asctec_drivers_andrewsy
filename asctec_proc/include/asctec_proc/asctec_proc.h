@@ -17,18 +17,22 @@
 const std::string rawdata_namespace_    = "asctec";
 const std::string procdata_namespace_   = "mav";
 
-const std::string cmd_thrust_topic_    = "cmd_thrust";
-const std::string cmd_yaw_topic_       = "cmd_yaw";
+// **** max namespace topics
+
+const std::string cmd_thrust_topic_      = "cmd_thrust";
+const std::string cmd_yaw_topic_         = "cmd_yaw";
+const std::string imu_topic_             = "imu";
+const std::string height_topic_          = "pressure_height";
+const std::string height_filtered_topic_ = "pressure_height_filtered";
+const std::string state_topic_           = "state";
+
+// **** asctec namespace topics
 
 const std::string ctrl_input_topic_    = "CTRL_INPUT";
 const std::string ll_status_topic_     = "LL_STATUS";
+const std::string imu_calcdata_topic_   = "IMU_CALCDATA";
 
-const std::string imuCalcDataTopic_    = "IMU_CALCDATA";
-const std::string imuTopic_            = "imu";
-const std::string heightTopic_         = "pressure_height";
-const std::string heightFilteredTopic_ = "pressure_height_filtered";
-
-const std::string state_topic_       = "state";
+// **** conversion units
 
 const double ASC_TO_ROS_ANGLE  = (1.0 /  1000.0) * 3.14159265 / 180.0; // converts to rad
 const double ASC_TO_ROS_ANGVEL = (1.0 /    64.8) * 3.14159265 / 180.0; // convetts to rad/s
