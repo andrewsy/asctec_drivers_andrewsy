@@ -5,13 +5,14 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <mav_msgs/State.h>
-#include <asctec_msgs/IMUCalcData.h>
+#include <mav_msgs/Height.h>
 #include <sensor_msgs/Imu.h>
-#include <asctec_msgs/Height.h>
+#include <asctec_msgs/IMUCalcData.h>
 #include <asctec_msgs/CtrlInput.h>
 #include <asctec_msgs/LLStatus.h>
+#include <boost/thread/mutex.hpp>
 #include <tf/transform_datatypes.h>
-#include <tf/transform_broadcaster.h>
+//#include <tf/transform_broadcaster.h>
 
 const std::string rawdata_namespace_    = "asctec";
 const std::string procdata_namespace_   = "mav";
@@ -63,7 +64,7 @@ class AsctecProc
     ros::Subscriber  state_subscriber_;
     ros::Subscriber  estop_subscriber_;
 
-    tf::TransformBroadcaster tfBroadcaster_;
+    //tf::TransformBroadcaster tfBroadcaster_;
 
     boost::mutex ctrl_mutex_;
     asctec_msgs::CtrlInputPtr ctrl_input_msg_;
@@ -102,10 +103,10 @@ class AsctecProc
                             sensor_msgs::ImuPtr& imuMsg);
 
     void createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                               asctec_msgs::HeightPtr& heightMsg);
+                               mav_msgs::HeightPtr& heightMsg);
 
     void createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                       asctec_msgs::HeightPtr& heightMsg);
+                                       mav_msgs::HeightPtr& heightMsg);
 
     void engageMotors();
     void disengageMotors();

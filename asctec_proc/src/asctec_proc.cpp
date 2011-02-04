@@ -49,7 +49,7 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   ctrl_input_msg_->yaw   = 0;
   ctrl_input_msg_->ctrl  = int(0b0000);
 
-  if (enable_ctrl_thrust_) ctrl_input_msg_->ctrl |= 0b1000; // FIXME These are from CtrlInput.msg 
+  if (enable_ctrl_thrust_) ctrl_input_msg_->ctrl |= 0b1000; // These are from CtrlInput.msg 
   if (enable_ctrl_yaw_)    ctrl_input_msg_->ctrl |= 0b0100;
   if (enable_ctrl_roll_)   ctrl_input_msg_->ctrl |= 0b0010;
   if (enable_ctrl_pitch_)  ctrl_input_msg_->ctrl |= 0b0001;
@@ -66,8 +66,8 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   // *** register publishers
 
   imuPublisher_            = nh_procdata.advertise<sensor_msgs::Imu>(imuTopic_, 10);
-  heightPublisher_         = nh_procdata.advertise<asctec_msgs::Height>(heightTopic_, 10);
-  heightFilteredPublisher_ = nh_procdata.advertise<asctec_msgs::Height>(heightFilteredTopic_, 10);
+  heightPublisher_         = nh_procdata.advertise<mav_msgs::Height>(heightTopic_, 10);
+  heightFilteredPublisher_ = nh_procdata.advertise<mav_msgs::Height>(heightFilteredTopic_, 10);
 
   ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(ctrl_input_topic_, 10);
 }
@@ -171,12 +171,12 @@ void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu
   imuPublisher_.publish(imuMsg);
 
   // publish unfiltered height message
-  asctec_msgs::HeightPtr heightMsg = boost::make_shared<asctec_msgs::Height>();
+  mav_msgs::HeightPtr heightMsg = boost::make_shared<mav_msgs::Height>();
   createHeightMsg (imuCalcDataMsg, heightMsg);
   heightPublisher_.publish(heightMsg);
 
   // publish filtered height message
-  asctec_msgs::HeightPtr heightFilteredMsg = boost::make_shared<asctec_msgs::Height>();
+  mav_msgs::HeightPtr heightFilteredMsg = boost::make_shared<mav_msgs::Height>();
   createHeightFilteredMsg (imuCalcDataMsg, heightFilteredMsg);
   heightFilteredPublisher_.publish(heightFilteredMsg);
 
@@ -202,7 +202,7 @@ void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu
 }
 
 void AsctecProc::createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                       asctec_msgs::HeightPtr& heightMsg)
+                                       mav_msgs::HeightPtr& heightMsg)
 {
   // set header info
   heightMsg->header.stamp    = imuCalcDataMsg->header.stamp;
@@ -213,7 +213,7 @@ void AsctecProc::createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalc
 }
 
 void AsctecProc::createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                               asctec_msgs::HeightPtr& heightMsg)
+                                               mav_msgs::HeightPtr& heightMsg)
 {
   // set header info
   heightMsg->header.stamp    = imuCalcDataMsg->header.stamp;
