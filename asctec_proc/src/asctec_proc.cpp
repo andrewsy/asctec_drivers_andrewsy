@@ -96,7 +96,7 @@ void AsctecProc::initializeParams()
   if (!nh_private_.getParam ("max_ctrl_pitch", max_ctrl_pitch_))
     max_ctrl_pitch_ = 300;
   if (!nh_private_.getParam ("max_ctrl_yaw", max_ctrl_yaw_))
-    max_ctrl_yaw_ = 600;
+    max_ctrl_yaw_ = 2047;
 }
 
 void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
