@@ -104,7 +104,7 @@ namespace asctec
     serialInterface_->serialport_bytes_rx_ = 0;
     serialInterface_->serialport_bytes_tx_ = 0;
 
-    ros::NodeHandle nh_rawdata(nh_, rawdata_namespace_);    // publish to "asctec_raw" namespace"
+    ros::NodeHandle nh_rawdata(nh_, asctec::ROS_NAMESPACE);    // publish to "asctec" namespace
     telemetry_ = new asctec::Telemetry::Telemetry(nh_rawdata);
 
     // Diagnostics
