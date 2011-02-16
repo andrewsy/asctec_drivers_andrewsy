@@ -53,6 +53,8 @@ class AsctecProc
     bool enable_ctrl_pitch_;
     bool enable_ctrl_yaw_;
 
+    bool enable_state_changes_;   // if true, monitor state, turn on/iff 
+
     int max_ctrl_thrust_;   // max output - in asctec units
     int max_ctrl_roll_; 
     int max_ctrl_pitch_;

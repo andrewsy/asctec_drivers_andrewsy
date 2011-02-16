@@ -65,8 +65,12 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
     mav::CMD_THRUST_TOPIC, 1, &AsctecProc::cmdThrustCallback, this);
   cmd_yaw_subscriber_ = nh_procdata.subscribe(
     mav::CMD_YAW_TOPIC, 1, &AsctecProc::cmdYawCallback, this);
-  state_subscriber_ = nh_procdata.subscribe(
-    mav::STATE_TOPIC, 1, &AsctecProc::stateCallback, this);
+
+  if(enable_state_changes_)
+  {
+    state_subscriber_ = nh_procdata.subscribe(
+      mav::STATE_TOPIC, 1, &AsctecProc::stateCallback, this);
+  }
 }
 
 AsctecProc::~AsctecProc()
@@ -77,6 +81,9 @@ AsctecProc::~AsctecProc()
 
 void AsctecProc::initializeParams()
 {
+  if (!nh_private_.getParam ("enable_state_changes", enable_state_changes_))
+    enable_state_changes_ = false;
+
   if (!nh_private_.getParam ("enable_ctrl_thrust", enable_ctrl_thrust_))
     enable_ctrl_thrust_ = false;
   if (!nh_private_.getParam ("enable_ctrl_pitch", enable_ctrl_pitch_))
