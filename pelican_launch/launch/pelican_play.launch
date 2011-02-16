@@ -1,8 +1,0 @@
-<launch>
-
-  <include file="$(find pelican_launch)/launch/pelican/bagdata_exp3.launch"/>
-
-  <include file="$(find pelican_launch)/launch/pelican/proc.launch"/>
-
-</launch>
-

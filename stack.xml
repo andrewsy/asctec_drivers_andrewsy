@@ -1,5 +1,5 @@
 <stack>
-  <description brief="asctec_drivers">Driver Stack for AscTec Products</description>
+  <description brief="asctec_drivers">Driver stack for AscTec Quadrotors</description>
   <author>Maintained by William Morris, Ivan Dryanovski et al.</author>
   <license>GPL</license>  
   <review status="experimental" notes="Under active development"/>

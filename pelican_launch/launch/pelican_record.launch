@@ -1,8 +1,0 @@
-<launch>
-
-  <include file="$(find pelican_launch)/launch/pelican/livedata.launch"/>
-
-  <include file="$(find pelican_launch)/launch/pelican/record_alltopics.launch"/>
-
-</launch>
-
