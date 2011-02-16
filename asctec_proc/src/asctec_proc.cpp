@@ -44,6 +44,17 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
 
   assembleCtrlCommands();
   
+  // *** register publishers
+
+  imuPublisher_  = nh_procdata.advertise<sensor_msgs::Imu>(
+    mav::IMU_TOPIC, 10);
+  heightPublisher_ = nh_procdata.advertise<mav_msgs::Height>(
+    mav::P_HEIGHT_TOPIC, 10);
+  heightFilteredPublisher_ = nh_procdata.advertise<mav_msgs::Height>(
+    mav::P_HEIGHT_FILTERED_TOPIC, 10);
+  ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(
+    asctec::CTRL_INPUT_TOPIC, 10);
+
   // **** register subscribers
 
   imuCalcDataSubscriber_ = nh_rawdata.subscribe(
@@ -56,17 +67,6 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
     mav::CMD_YAW_TOPIC, 1, &AsctecProc::cmdYawCallback, this);
   state_subscriber_ = nh_procdata.subscribe(
     mav::STATE_TOPIC, 1, &AsctecProc::stateCallback, this);
-
-  // *** register publishers
-
-  imuPublisher_  = nh_procdata.advertise<sensor_msgs::Imu>(
-    mav::IMU_TOPIC, 10);
-  heightPublisher_ = nh_procdata.advertise<mav_msgs::Height>(
-    mav::HEIGHT_TOPIC, 10);
-  heightFilteredPublisher_ = nh_procdata.advertise<mav_msgs::Height>(
-    mav::HEIGHT_FILTERED_TOPIC, 10);
-  ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(
-    asctec::CTRL_INPUT_TOPIC, 10);
 }
 
 AsctecProc::~AsctecProc()
