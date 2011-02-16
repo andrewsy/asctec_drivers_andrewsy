@@ -1,7 +1,7 @@
 <package>
   <description brief="asctec_proc">
 
-     The asctec_proc package takes messages published by asctec_autopilot and translates them into ROS_formatted messages.
+     The asctec_proc package is a bridge between the asctec_autopilot software and hardware-independent MAV tools.
 
   </description>
   <author>Ivan Dryanovski</author>
