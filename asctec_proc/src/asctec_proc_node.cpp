@@ -26,7 +26,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "AsctecProc");
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  asctec::AsctecProc asctecProc(nh, nh_private);
+  asctec::AsctecProc asctec_proc(nh, nh_private);
   ros::spin();
   return 0;
 }
