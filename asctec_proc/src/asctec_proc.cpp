@@ -41,28 +41,35 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
 
   engaged_ = false;
   prev_state_ = mav::OFF;
+  imu_msg_             = boost::make_shared<sensor_msgs::Imu>();
+  height_msg_          = boost::make_shared<mav_msgs::Height>();
+  height_filtered_msg_ = boost::make_shared<mav_msgs::Height>();
 
   assembleCtrlCommands();
   
   // *** register publishers
 
-  imuPublisher_  = nh_procdata.advertise<sensor_msgs::Imu>(
+  imu_publisher_  = nh_procdata.advertise<sensor_msgs::Imu>(
     mav::IMU_TOPIC, 10);
-  heightPublisher_ = nh_procdata.advertise<mav_msgs::Height>(
+  height_publisher_ = nh_procdata.advertise<mav_msgs::Height>(
     mav::P_HEIGHT_TOPIC, 10);
-  heightFilteredPublisher_ = nh_procdata.advertise<mav_msgs::Height>(
+  height_filtered_publisher_ = nh_procdata.advertise<mav_msgs::Height>(
     mav::P_HEIGHT_FILTERED_TOPIC, 10);
   ctrl_input_publisher_ = nh_rawdata.advertise<asctec_msgs::CtrlInput>(
     asctec::CTRL_INPUT_TOPIC, 10);
 
   // **** register subscribers
 
-  imuCalcDataSubscriber_ = nh_rawdata.subscribe(
+  imu_calcdata_subscriber_ = nh_rawdata.subscribe(
     asctec::IMU_CALCDATA_TOPIC, 10, &AsctecProc::imuCalcDataCallback, this);
   ll_status_subscriber_ = nh_rawdata.subscribe(
     asctec::LL_STATUS_TOPIC, 1, &AsctecProc::llStatusCallback, this);
   cmd_thrust_subscriber_ = nh_procdata.subscribe(
     mav::CMD_THRUST_TOPIC, 1, &AsctecProc::cmdThrustCallback, this);
+  cmd_roll_subscriber_ = nh_procdata.subscribe(
+    mav::CMD_ROLL_TOPIC, 1, &AsctecProc::cmdRollCallback, this);
+  cmd_pitch_subscriber_ = nh_procdata.subscribe(
+    mav::CMD_PITCH_TOPIC, 1, &AsctecProc::cmdPitchCallback, this);
   cmd_yaw_subscriber_ = nh_procdata.subscribe(
     mav::CMD_YAW_TOPIC, 1, &AsctecProc::cmdYawCallback, this);
 
@@ -122,6 +129,56 @@ void AsctecProc::stateCallback (const mav_msgs::StatePtr& state_msg)
   prev_state_ = state_msg->state;
 }
 
+void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll)
+{
+  // translate from cmd_roll [-1.0 to 1.0] to ctrl_roll [-2047 .. 2047],
+  int ctrl_roll = (int)(cmd_roll->data * mav::ROS_TO_ASC_ROLL);
+
+  ROS_DEBUG ("cmd_roll received: %f (%d)", cmd_roll->data, ctrl_roll);
+
+  // limit min/max output
+  if (ctrl_roll > max_ctrl_roll_)
+  {
+    ROS_WARN("ctrl_roll of %d too big, clamping to %d!", ctrl_roll, max_ctrl_roll_);
+    ctrl_roll = max_ctrl_roll_;
+  }
+  else if (ctrl_roll < -max_ctrl_roll_)
+  {
+    ROS_WARN("ctrl_roll of %d too small, clamping to -%d!", ctrl_roll, -max_ctrl_roll_);
+    ctrl_roll = -max_ctrl_roll_;
+  }
+
+  // change roll in message and publish
+  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_input_msg_->roll = ctrl_roll;
+  publishCtrlInputMsg();
+}
+
+void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch)
+{
+  // translate from cmd_pitch [-1.0 to 1.0] to ctrl_pitch [-2047 .. 2047],
+  int ctrl_pitch = (int)(cmd_pitch->data * mav::ROS_TO_ASC_PITCH);
+
+  ROS_DEBUG ("cmd_pitch received: %f (%d)", cmd_pitch->data, ctrl_pitch);
+
+  // limit min/max output
+  if (ctrl_pitch > max_ctrl_pitch_)
+  {
+    ROS_WARN("ctrl_pitch of %d too big, clamping to %d!", ctrl_pitch, max_ctrl_pitch_);
+    ctrl_pitch = max_ctrl_pitch_;
+  }
+  else if (ctrl_pitch < -max_ctrl_pitch_)
+  {
+    ROS_WARN("ctrl_pitch of %d too small, clamping to -%d!", ctrl_pitch, -max_ctrl_pitch_);
+    ctrl_pitch = -max_ctrl_pitch_;
+  }
+
+  // change pitch in message and publish
+  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_input_msg_->pitch = ctrl_pitch;
+  publishCtrlInputMsg();
+}
+
 void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
 {
   // translate from cmd_yaw [-1.0 to 1.0] to ctrl_yaw [-2047 .. 2047],
@@ -172,22 +229,19 @@ void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
   publishCtrlInputMsg();
 }
 
-void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg)
+void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
 {
   // publish imu message
-  sensor_msgs::ImuPtr imuMsg = boost::make_shared<sensor_msgs::Imu>();
-  createImuMsg (imuCalcDataMsg, imuMsg);
-  imuPublisher_.publish(imuMsg);
+  createImuMsg (imu_calcdata_msg);
+  imu_publisher_.publish(imu_msg_);
 
   // publish unfiltered height message
-  mav_msgs::HeightPtr heightMsg = boost::make_shared<mav_msgs::Height>();
-  createHeightMsg (imuCalcDataMsg, heightMsg);
-  heightPublisher_.publish(heightMsg);
+  createHeightMsg (imu_calcdata_msg);
+  height_publisher_.publish(height_msg_);
 
   // publish filtered height message
-  mav_msgs::HeightPtr heightFilteredMsg = boost::make_shared<mav_msgs::Height>();
-  createHeightFilteredMsg (imuCalcDataMsg, heightFilteredMsg);
-  heightFilteredPublisher_.publish(heightFilteredMsg);
+  createHeightFilteredMsg (imu_calcdata_msg);
+  height_filtered_publisher_.publish(height_filtered_msg_);
 
 /*
   printf("IMU: %f %f %f\n", imuCalcDataMsg->angle_roll * ASC_TO_ROS_ANGLE,
@@ -210,39 +264,36 @@ void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu
 */
 }
 
-void AsctecProc::createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                       mav_msgs::HeightPtr& heightMsg)
+void AsctecProc::createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
 {
   // set header info
-  heightMsg->header.stamp    = imuCalcDataMsg->header.stamp;
-  heightMsg->header.frame_id = "imu";             // the frame seems arbitrary here
+  height_msg_->header.stamp    = imu_calcdata_msg->header.stamp;
+  height_msg_->header.frame_id = "imu"; // the frame seems arbitrary here
 
-  heightMsg->height = imuCalcDataMsg->height_reference  * mav::ASC_TO_ROS_HEIGHT;
-  heightMsg->climb  = imuCalcDataMsg->dheight_reference * mav::ASC_TO_ROS_HEIGHT;   
+  height_msg_->height = imu_calcdata_msg->height_reference  * mav::ASC_TO_ROS_HEIGHT;
+  height_msg_->climb  = imu_calcdata_msg->dheight_reference * mav::ASC_TO_ROS_HEIGHT;   
 }
 
-void AsctecProc::createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                               mav_msgs::HeightPtr& heightMsg)
+void AsctecProc::createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
 {
   // set header info
-  heightMsg->header.stamp    = imuCalcDataMsg->header.stamp;
-  heightMsg->header.frame_id = "imu";             // the frame seems arbitrary here
+  height_filtered_msg_->header.stamp    = imu_calcdata_msg->header.stamp;
+  height_filtered_msg_->header.frame_id = "imu"; // the frame seems arbitrary here
 
-  heightMsg->height = imuCalcDataMsg->height  * mav::ASC_TO_ROS_HEIGHT;
-  heightMsg->climb  = imuCalcDataMsg->dheight * mav::ASC_TO_ROS_HEIGHT;   
+  height_filtered_msg_->height = imu_calcdata_msg->height  * mav::ASC_TO_ROS_HEIGHT;
+  height_filtered_msg_->climb  = imu_calcdata_msg->dheight * mav::ASC_TO_ROS_HEIGHT;   
 }
 
-void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDataMsg,
-                                    sensor_msgs::ImuPtr& imuMsg)
+void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
 {
   // set header info
-  imuMsg->header.stamp    = imuCalcDataMsg->header.stamp;
-  imuMsg->header.frame_id = "imu";
+  imu_msg_->header.stamp    = imu_calcdata_msg->header.stamp;
+  imu_msg_->header.frame_id = "imu";
 
   // copy over linear acceleration
-  imuMsg->linear_acceleration.x = imuCalcDataMsg->acc_x_calib * mav::ASC_TO_ROS_ACC;
-  imuMsg->linear_acceleration.y = imuCalcDataMsg->acc_y_calib * mav::ASC_TO_ROS_ACC;
-  imuMsg->linear_acceleration.z = imuCalcDataMsg->acc_z_calib * mav::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.x = imu_calcdata_msg->acc_x_calib * mav::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.y = imu_calcdata_msg->acc_y_calib * mav::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.z = imu_calcdata_msg->acc_z_calib * mav::ASC_TO_ROS_ACC;
 
 /* // Uncomment these if you use covariances
   // define linear acceleration variance
@@ -256,10 +307,10 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDat
   imuMsg->linear_acceleration_covariance[7] = 0.0;
   imuMsg->linear_acceleration_covariance[8] = 1.0;
 */
-  // copy over angular_velocity
-  imuMsg->angular_velocity.x = imuCalcDataMsg->angvel_roll * mav::ASC_TO_ROS_ANGVEL * -1.0;
-  imuMsg->angular_velocity.y = imuCalcDataMsg->angvel_nick * mav::ASC_TO_ROS_ANGVEL;
-  imuMsg->angular_velocity.z = imuCalcDataMsg->angvel_yaw  * mav::ASC_TO_ROS_ANGVEL * -1.0; 
+  // copy over angular_velocity - minus signs convert to ENU frame
+  imu_msg_->angular_velocity.x = imu_calcdata_msg->angvel_roll * mav::ASC_TO_ROS_ANGVEL * -1.0;
+  imu_msg_->angular_velocity.y = imu_calcdata_msg->angvel_nick * mav::ASC_TO_ROS_ANGVEL;
+  imu_msg_->angular_velocity.z = imu_calcdata_msg->angvel_yaw  * mav::ASC_TO_ROS_ANGVEL * -1.0; 
 
 /* // Uncomment these if you use covariances
   // define angular_velocity variance
@@ -274,16 +325,16 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imuCalcDat
   imuMsg->angular_velocity_covariance[8] = 1.0;
 */
 
-  // calculate quaternion orientation
+  // calculate quaternion orientation - minus signs convert to ENU frame
   btQuaternion orientation;
-  orientation.setRPY(imuCalcDataMsg->angle_roll * mav::ASC_TO_ROS_ANGLE * -1.0,
-                     imuCalcDataMsg->angle_nick * mav::ASC_TO_ROS_ANGLE,
-                     imuCalcDataMsg->angle_yaw  * mav::ASC_TO_ROS_ANGLE * -1.0);
+  orientation.setRPY(imu_calcdata_msg->angle_roll * mav::ASC_TO_ROS_ANGLE * -1.0,
+                     imu_calcdata_msg->angle_nick * mav::ASC_TO_ROS_ANGLE,
+                     imu_calcdata_msg->angle_yaw  * mav::ASC_TO_ROS_ANGLE * -1.0);
 
-  imuMsg->orientation.x = orientation.getX();
-  imuMsg->orientation.y = orientation.getY();
-  imuMsg->orientation.z = orientation.getZ();
-  imuMsg->orientation.w = orientation.getW();
+  imu_msg_->orientation.x = orientation.getX();
+  imu_msg_->orientation.y = orientation.getY();
+  imu_msg_->orientation.z = orientation.getZ();
+  imu_msg_->orientation.w = orientation.getW();
 }
 
 void AsctecProc::engageMotors()
