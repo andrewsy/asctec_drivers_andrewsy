@@ -4,5 +4,10 @@
   <license>GPL</license>  
   <review status="experimental" notes="Under active development"/>
   <url>http://ros.org/wiki/asctec_drivers</url>
+  <depend stack="common" />
+  <depend stack="common_msgs" />
+  <depend stack="diagnostics" />
+  <depend stack="geometry" />
+  <depend stack="mav_tools" />
   <depend stack="ros" />
 </stack>
