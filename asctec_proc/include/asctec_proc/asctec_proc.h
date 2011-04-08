@@ -32,8 +32,8 @@ const double ROS_TO_ASC_PITCH    = 2047.0;          // converts from [-1, 1] to 
 
 // Per email from AscTec,
 // """The standard parameter for K_stick_yaw is 120, resulting in a maximum rate of
-// 254.760 degrees per second. I.e. a 360° turn takes about 1.5 seconds."""
-const double ROS_TO_ASC_YAW_RATE = 2047.0/254.760;  // converts from rad/s to yaw_rate stick counts
+// 254.760 degrees per second = 4.43 rad/s. I.e. a 360° turn takes about 1.5 seconds."""
+const double ROS_TO_ASC_YAW_RATE = 2047.0/4.43;  // converts from rad/s to yaw_rate stick counts
 
 class AsctecProc
 {
@@ -59,6 +59,9 @@ class AsctecProc
 
     // **** state variables
 
+    bool state_;    // state is currently being modified
+
+    boost::mutex state_mutex_;
     boost::mutex ctrl_mutex_;
     asctec_msgs::CtrlInputPtr ctrl_input_msg_;        // periodically sent to autopilot
     asctec_msgs::CtrlInputPtr ctrl_input_toggle_msg_; // stick to the lower left
