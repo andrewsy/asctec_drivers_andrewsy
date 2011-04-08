@@ -149,9 +149,10 @@ void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
   }
 
   // change roll in message and publish
-  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_mutex_.lock();
   ctrl_input_msg_->roll = ctrl_roll;
   publishCtrlInputMsg();
+  ctrl_mutex_.unlock();
 }
 
 void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg)
@@ -174,9 +175,10 @@ void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg
   }
 
   // change pitch in message and publish
-  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_mutex_.lock();
   ctrl_input_msg_->pitch = ctrl_pitch;
   publishCtrlInputMsg();
+  ctrl_mutex_.unlock();
 }
 
 void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_msg)
@@ -199,9 +201,10 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_ms
   }
 
   // change yaw in message and publish
-  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_mutex_.lock();
   ctrl_input_msg_->yaw = ctrl_yaw;
   publishCtrlInputMsg();
+  ctrl_mutex_.unlock();
 }
 
 void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_msg)
@@ -224,9 +227,10 @@ void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_m
   }
 
   // change thrust in message and publish
-  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_mutex_.lock();
   ctrl_input_msg_->thrust = ctrl_thrust;
   publishCtrlInputMsg();
+  ctrl_mutex_.unlock();
 }
 
 void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
@@ -344,7 +348,7 @@ void AsctecProc::engageMotors()
 
   ROS_DEBUG ("Engaging motors...");
 
-  boost::mutex::scoped_lock(ctrl_mutex_);
+  ctrl_mutex_.lock();
 
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
@@ -355,6 +359,7 @@ void AsctecProc::engageMotors()
   }
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
+  ctrl_mutex_.unlock();
 
   ROS_DEBUG("Done engaging motors.");
 }
@@ -366,8 +371,7 @@ void AsctecProc::disengageMotors()
 
   ROS_DEBUG ("Disengaging motors...");
 
-  boost::mutex::scoped_lock(ctrl_mutex_);
-
+  ctrl_mutex_.lock();
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
   while(engaged_)
@@ -377,6 +381,7 @@ void AsctecProc::disengageMotors()
   }
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
+  ctrl_mutex_.unlock();
 
   ROS_DEBUG("Done disengaging motors.");
 }
