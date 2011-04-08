@@ -17,6 +17,24 @@
 
 namespace asctec
 {
+
+// **** conversion units
+
+const double ASC_TO_ROS_ANGLE  = (1.0 /  1000.0) * 3.14159265 / 180.0; // converts to rad
+const double ASC_TO_ROS_ANGVEL = (1.0 /    64.8) * 3.14159265 / 180.0; // convetts to rad/s
+const double ASC_TO_ROS_ACC    = (1.0 / 10000.0) * 9.81;               // converts to m/s^s
+const double ASC_TO_ROS_HEIGHT = (1.0 /  1000.0);                      // converts to m
+
+// from asctec CtrlInput definitions
+const double ROS_TO_ASC_THRUST   = 4095.0;          // converts from [ 0, 1] to thrust stick counts
+const double ROS_TO_ASC_ROLL     = 2047.0;          // converts from [-1, 1] to roll stick counts
+const double ROS_TO_ASC_PITCH    = 2047.0;          // converts from [-1, 1] to pitch stick counts
+
+// Per email from AscTec,
+// """The standard parameter for K_stick_yaw is 120, resulting in a maximum rate of
+// 254.760 degrees per second. I.e. a 360° turn takes about 1.5 seconds."""
+const double ROS_TO_ASC_YAW_RATE = 2047.0/254.760;  // converts from rad/s to yaw_rate stick counts
+
 class AsctecProc
 {
   private:
@@ -72,10 +90,10 @@ class AsctecProc
     void initializeParams();
     void assembleCtrlCommands();
 
-    void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust);
-    void cmdRollCallback  (const std_msgs::Float64ConstPtr& cmd_roll);
-    void cmdPitchCallback (const std_msgs::Float64ConstPtr& cmd_pitch);
-    void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw);
+    void cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_msg);
+    void cmdRollCallback  (const std_msgs::Float64ConstPtr& cmd_roll_msg);
+    void cmdPitchCallback (const std_msgs::Float64ConstPtr& cmd_pitch_msg);
+    void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw_rate_msg);
     void stateCallback    (const mav_msgs::StatePtr&        state_msg);
     void llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg);
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);

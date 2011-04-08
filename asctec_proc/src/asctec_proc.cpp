@@ -71,7 +71,7 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   cmd_pitch_subscriber_ = nh_procdata.subscribe(
     mav::CMD_PITCH_TOPIC, 1, &AsctecProc::cmdPitchCallback, this);
   cmd_yaw_subscriber_ = nh_procdata.subscribe(
-    mav::CMD_YAW_TOPIC, 1, &AsctecProc::cmdYawCallback, this);
+    mav::CMD_YAW_RATE_TOPIC, 1, &AsctecProc::cmdYawCallback, this);
 
   if(enable_state_changes_)
   {
@@ -129,12 +129,12 @@ void AsctecProc::stateCallback (const mav_msgs::StatePtr& state_msg)
   prev_state_ = state_msg->state;
 }
 
-void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll)
+void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
 {
   // translate from cmd_roll [-1.0 to 1.0] to ctrl_roll [-2047 .. 2047],
-  int ctrl_roll = (int)(cmd_roll->data * mav::ROS_TO_ASC_ROLL);
+  int ctrl_roll = (int)(cmd_roll_msg->data * asctec::ROS_TO_ASC_ROLL);
 
-  ROS_DEBUG ("cmd_roll received: %f (%d)", cmd_roll->data, ctrl_roll);
+  ROS_DEBUG ("cmd_roll received: %f (%d)", cmd_roll_msg->data, ctrl_roll);
 
   // limit min/max output
   if (ctrl_roll > max_ctrl_roll_)
@@ -154,12 +154,12 @@ void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll)
   publishCtrlInputMsg();
 }
 
-void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch)
+void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg)
 {
   // translate from cmd_pitch [-1.0 to 1.0] to ctrl_pitch [-2047 .. 2047],
-  int ctrl_pitch = (int)(cmd_pitch->data * mav::ROS_TO_ASC_PITCH);
+  int ctrl_pitch = (int)(cmd_pitch_msg->data * asctec::ROS_TO_ASC_PITCH);
 
-  ROS_DEBUG ("cmd_pitch received: %f (%d)", cmd_pitch->data, ctrl_pitch);
+  ROS_DEBUG ("cmd_pitch received: %f (%d)", cmd_pitch_msg->data, ctrl_pitch);
 
   // limit min/max output
   if (ctrl_pitch > max_ctrl_pitch_)
@@ -179,12 +179,12 @@ void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch)
   publishCtrlInputMsg();
 }
 
-void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
+void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_msg)
 {
-  // translate from cmd_yaw [-1.0 to 1.0] to ctrl_yaw [-2047 .. 2047],
-  int ctrl_yaw = (int)(cmd_yaw->data * mav::ROS_TO_ASC_YAW);
+  // translate from cmd_yaw [rad/s] to ctrl_yaw [-2047 .. 2047],
+  int ctrl_yaw = (int)(cmd_yaw_rate_msg->data * asctec::ROS_TO_ASC_YAW_RATE);
 
-  ROS_DEBUG ("cmd_yaw received: %f (%d)", cmd_yaw->data, ctrl_yaw);
+  ROS_DEBUG ("cmd_yaw received: %f (%d)", cmd_yaw_rate_msg->data, ctrl_yaw);
 
   // limit min/max output
   if (ctrl_yaw > max_ctrl_yaw_)
@@ -204,12 +204,12 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw)
   publishCtrlInputMsg();
 }
 
-void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust)
+void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_msg)
 {
   // translate from cmd_thrust [0.0 to 1.0] to ctrl_thrust [0 to 4095],
-  int ctrl_thrust = (int)(cmd_thrust->data * mav::ROS_TO_ASC_THRUST);
+  int ctrl_thrust = (int)(cmd_thrust_msg->data * asctec::ROS_TO_ASC_THRUST);
 
-  ROS_DEBUG ("cmd_thrust received: %f (%d)", cmd_thrust->data, ctrl_thrust);
+  ROS_DEBUG ("cmd_thrust received: %f (%d)", cmd_thrust_msg->data, ctrl_thrust);
 
   // limit min-max output
   if (ctrl_thrust > max_ctrl_thrust_)
@@ -270,8 +270,8 @@ void AsctecProc::createHeightMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_cal
   height_msg_->header.stamp    = imu_calcdata_msg->header.stamp;
   height_msg_->header.frame_id = "imu"; // the frame seems arbitrary here
 
-  height_msg_->height = imu_calcdata_msg->height_reference  * mav::ASC_TO_ROS_HEIGHT;
-  height_msg_->climb  = imu_calcdata_msg->dheight_reference * mav::ASC_TO_ROS_HEIGHT;   
+  height_msg_->height = imu_calcdata_msg->height_reference  * asctec::ASC_TO_ROS_HEIGHT;
+  height_msg_->climb  = imu_calcdata_msg->dheight_reference * asctec::ASC_TO_ROS_HEIGHT;   
 }
 
 void AsctecProc::createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
@@ -280,8 +280,8 @@ void AsctecProc::createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr&
   height_filtered_msg_->header.stamp    = imu_calcdata_msg->header.stamp;
   height_filtered_msg_->header.frame_id = "imu"; // the frame seems arbitrary here
 
-  height_filtered_msg_->height = imu_calcdata_msg->height  * mav::ASC_TO_ROS_HEIGHT;
-  height_filtered_msg_->climb  = imu_calcdata_msg->dheight * mav::ASC_TO_ROS_HEIGHT;   
+  height_filtered_msg_->height = imu_calcdata_msg->height  * asctec::ASC_TO_ROS_HEIGHT;
+  height_filtered_msg_->climb  = imu_calcdata_msg->dheight * asctec::ASC_TO_ROS_HEIGHT;   
 }
 
 void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
@@ -291,9 +291,9 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcda
   imu_msg_->header.frame_id = "imu";
 
   // copy over linear acceleration
-  imu_msg_->linear_acceleration.x = imu_calcdata_msg->acc_x_calib * mav::ASC_TO_ROS_ACC;
-  imu_msg_->linear_acceleration.y = imu_calcdata_msg->acc_y_calib * mav::ASC_TO_ROS_ACC;
-  imu_msg_->linear_acceleration.z = imu_calcdata_msg->acc_z_calib * mav::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.x = imu_calcdata_msg->acc_x_calib * asctec::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.y = imu_calcdata_msg->acc_y_calib * asctec::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.z = imu_calcdata_msg->acc_z_calib * asctec::ASC_TO_ROS_ACC;
 
 /* // Uncomment these if you use covariances
   // define linear acceleration variance
@@ -308,9 +308,9 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcda
   imuMsg->linear_acceleration_covariance[8] = 1.0;
 */
   // copy over angular_velocity - minus signs convert to ENU frame
-  imu_msg_->angular_velocity.x = imu_calcdata_msg->angvel_roll * mav::ASC_TO_ROS_ANGVEL * -1.0;
-  imu_msg_->angular_velocity.y = imu_calcdata_msg->angvel_nick * mav::ASC_TO_ROS_ANGVEL;
-  imu_msg_->angular_velocity.z = imu_calcdata_msg->angvel_yaw  * mav::ASC_TO_ROS_ANGVEL * -1.0; 
+  imu_msg_->angular_velocity.x = imu_calcdata_msg->angvel_roll * asctec::ASC_TO_ROS_ANGVEL * -1.0;
+  imu_msg_->angular_velocity.y = imu_calcdata_msg->angvel_nick * asctec::ASC_TO_ROS_ANGVEL;
+  imu_msg_->angular_velocity.z = imu_calcdata_msg->angvel_yaw  * asctec::ASC_TO_ROS_ANGVEL * -1.0; 
 
 /* // Uncomment these if you use covariances
   // define angular_velocity variance
@@ -327,9 +327,9 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcda
 
   // calculate quaternion orientation - minus signs convert to ENU frame
   btQuaternion orientation;
-  orientation.setRPY(imu_calcdata_msg->angle_roll * mav::ASC_TO_ROS_ANGLE * -1.0,
-                     imu_calcdata_msg->angle_nick * mav::ASC_TO_ROS_ANGLE,
-                     imu_calcdata_msg->angle_yaw  * mav::ASC_TO_ROS_ANGLE * -1.0);
+  orientation.setRPY(imu_calcdata_msg->angle_roll * asctec::ASC_TO_ROS_ANGLE * -1.0,
+                     imu_calcdata_msg->angle_nick * asctec::ASC_TO_ROS_ANGLE,
+                     imu_calcdata_msg->angle_yaw  * asctec::ASC_TO_ROS_ANGLE * -1.0);
 
   imu_msg_->orientation.x = orientation.getX();
   imu_msg_->orientation.y = orientation.getY();
