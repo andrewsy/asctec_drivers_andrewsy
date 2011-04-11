@@ -138,13 +138,15 @@ bool AsctecProc::engage(mav_msgs::Engage::Request  &req,
 
   if (req.engaged && !engaged_)
   {
-    *ctrl_input_msg_ = *ctrl_input_zero_msg_;
+    ctrl_input_msg_->roll = 0;
+    ctrl_input_msg_->pitch = 0;
+    ctrl_input_msg_->yaw = 0;
+    ctrl_input_msg_->thrust = 0;
     engageMotors();
   }
   else
   {
     disengageMotors();
-    *ctrl_input_msg_ = *ctrl_input_zero_msg_;
   }
 
   engaging_ = false;
@@ -425,7 +427,7 @@ void AsctecProc::engageMotors()
   for (int i = 0; i < 15; ++i)
   {
     if (engaged_) break;
-    printf("\tt\n");
+    //printf("\tt\n");
     ros::Duration(0.20).sleep();
     ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
   }
@@ -447,8 +449,7 @@ void AsctecProc::disengageMotors()
   for (int i = 0; i < 15; ++i)
   {
     if (!engaged_) break;
-
-    printf("\tt\n");
+    //printf("\tt\n");
     ros::Duration(0.20).sleep();
     ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
   }
