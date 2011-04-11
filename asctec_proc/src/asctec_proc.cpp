@@ -65,14 +65,27 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
     asctec::IMU_CALCDATA_TOPIC, 10, &AsctecProc::imuCalcDataCallback, this);
   ll_status_subscriber_ = nh_rawdata.subscribe(
     asctec::LL_STATUS_TOPIC, 5, &AsctecProc::llStatusCallback, this);
-  cmd_thrust_subscriber_ = nh_procdata.subscribe(
-    mav::CMD_THRUST_TOPIC, 1, &AsctecProc::cmdThrustCallback, this);
-  cmd_roll_subscriber_ = nh_procdata.subscribe(
-    mav::CMD_ROLL_TOPIC, 1, &AsctecProc::cmdRollCallback, this);
-  cmd_pitch_subscriber_ = nh_procdata.subscribe(
-    mav::CMD_PITCH_TOPIC, 1, &AsctecProc::cmdPitchCallback, this);
-  cmd_yaw_subscriber_ = nh_procdata.subscribe(
-    mav::CMD_YAW_RATE_TOPIC, 5, &AsctecProc::cmdYawCallback, this);
+
+  if (enable_ctrl_thrust_)
+  {
+    cmd_thrust_subscriber_ = nh_procdata.subscribe(
+      mav::CMD_THRUST_TOPIC, 1, &AsctecProc::cmdThrustCallback, this);
+  }
+  if (enable_ctrl_roll_)
+  {
+    cmd_roll_subscriber_ = nh_procdata.subscribe(
+      mav::CMD_ROLL_TOPIC, 1, &AsctecProc::cmdRollCallback, this);
+  }
+  if (enable_ctrl_pitch_)
+  {
+    cmd_pitch_subscriber_ = nh_procdata.subscribe(
+      mav::CMD_PITCH_TOPIC, 1, &AsctecProc::cmdPitchCallback, this);
+  }
+  if (enable_ctrl_yaw_)
+  {
+    cmd_yaw_subscriber_ = nh_procdata.subscribe(
+      mav::CMD_YAW_RATE_TOPIC, 5, &AsctecProc::cmdYawCallback, this);
+  }
 
   // **** services
 
