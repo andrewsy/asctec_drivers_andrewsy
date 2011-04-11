@@ -15,6 +15,9 @@
 #include <boost/thread/mutex.hpp>
 #include <tf/transform_datatypes.h>
 
+#include "mav_msgs/Engage.h"
+#include "mav_msgs/GetEngaged.h"
+
 namespace asctec
 {
 
@@ -57,6 +60,9 @@ class AsctecProc
     ros::Publisher height_filtered_publisher_;
     ros::Publisher ctrl_input_publisher_;
 
+    ros::ServiceServer engage_srv_;
+    ros::ServiceServer get_engaged_srv_;
+
     // **** state variables
 
     bool state_;    // state is currently being modified
@@ -97,7 +103,7 @@ class AsctecProc
     void cmdRollCallback  (const std_msgs::Float64ConstPtr& cmd_roll_msg);
     void cmdPitchCallback (const std_msgs::Float64ConstPtr& cmd_pitch_msg);
     void cmdYawCallback   (const std_msgs::Float64ConstPtr& cmd_yaw_rate_msg);
-    void stateCallback    (const mav_msgs::StatePtr&        state_msg);
+    //void stateCallback    (const mav_msgs::StatePtr&        state_msg);
     void llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg);
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
 
@@ -108,6 +114,11 @@ class AsctecProc
     void engageMotors();
     void disengageMotors();
     void publishCtrlInputMsg();
+
+    bool engage(mav_msgs::Engage::Request  &req,
+                mav_msgs::Engage::Response &res);
+    bool getEngaged(mav_msgs::GetEngaged::Request  &req,
+                    mav_msgs::GetEngaged::Response &res);
 
   public:
 

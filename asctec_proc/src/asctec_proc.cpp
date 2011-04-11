@@ -74,11 +74,20 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   cmd_yaw_subscriber_ = nh_procdata.subscribe(
     mav::CMD_YAW_RATE_TOPIC, 5, &AsctecProc::cmdYawCallback, this);
 
+/*
   if(enable_state_changes_)
   {
     state_subscriber_ = nh_procdata.subscribe(
       mav::STATE_TOPIC, 5, &AsctecProc::stateCallback, this);
   }
+*/
+
+  // **** services
+
+  engage_srv_      = nh_procdata.advertiseService(
+    "engage",     &AsctecProc::engage,    this);
+  get_engaged_srv_ = nh_procdata.advertiseService(
+    "getEngaged", &AsctecProc::getEngaged, this);
 }
 
 AsctecProc::~AsctecProc()
@@ -111,12 +120,40 @@ void AsctecProc::initializeParams()
     max_ctrl_yaw_ = 2047;
 }
 
+bool AsctecProc::engage(mav_msgs::Engage::Request  &req,
+                        mav_msgs::Engage::Response &res)
+{
+  state_mutex_.lock();
+
+  if (req.engaged && !engaged_)
+  {
+    engageMotors();
+    engaged_ = true;
+  }
+  else
+  {
+    disengageMotors();
+    engaged_ = false;
+  }
+
+  state_mutex_.unlock();
+
+  return true;
+}
+
+bool AsctecProc::getEngaged(mav_msgs::GetEngaged::Request  &req,
+                            mav_msgs::GetEngaged::Response &res)
+{
+  return engaged_;
+}
+
 void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
 {
   //ROS_INFO("status callback");
   engaged_ = ll_status_msg->flying;
 }
 
+/*
 void AsctecProc::stateCallback (const mav_msgs::StatePtr& state_msg)
 {
   state_mutex_.lock();
@@ -133,7 +170,7 @@ void AsctecProc::stateCallback (const mav_msgs::StatePtr& state_msg)
   prev_state_ = state_msg->state;
   state_ = false;
   state_mutex_.unlock();
-}
+}*/
 
 void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
 {
@@ -362,8 +399,6 @@ void AsctecProc::engageMotors()
 
   ROS_DEBUG ("Engaging motors...");
 
-  //ctrl_mutex_.lock();
-
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
   while(!engaged_)
@@ -373,7 +408,6 @@ void AsctecProc::engageMotors()
   }
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
-  //ctrl_mutex_.unlock();
 
   ROS_DEBUG("Done engaging motors.");
 }
@@ -385,7 +419,6 @@ void AsctecProc::disengageMotors()
 
   ROS_DEBUG ("Disengaging motors...");
 
-  //ctrl_mutex_.lock();
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
   while(engaged_)
@@ -395,7 +428,6 @@ void AsctecProc::disengageMotors()
   }
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
-  //ctrl_mutex_.unlock();
 
   ROS_DEBUG("Done disengaging motors.");
 }
