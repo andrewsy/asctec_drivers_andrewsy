@@ -74,18 +74,13 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   cmd_yaw_subscriber_ = nh_procdata.subscribe(
     mav::CMD_YAW_RATE_TOPIC, 5, &AsctecProc::cmdYawCallback, this);
 
-/*
-  if(enable_state_changes_)
-  {
-    state_subscriber_ = nh_procdata.subscribe(
-      mav::STATE_TOPIC, 5, &AsctecProc::stateCallback, this);
-  }
-*/
-
   // **** services
 
-  engage_srv_      = nh_procdata.advertiseService(
-    "engage",     &AsctecProc::engage,    this);
+  if(enable_state_changes_)
+  {
+    engage_srv_      = nh_procdata.advertiseService(
+      "engage",     &AsctecProc::engage,    this);
+  }
   get_engaged_srv_ = nh_procdata.advertiseService(
     "getEngaged", &AsctecProc::getEngaged, this);
 }
@@ -128,28 +123,29 @@ bool AsctecProc::engage(mav_msgs::Engage::Request  &req,
   if (req.engaged && !engaged_)
   {
     engageMotors();
-    engaged_ = true;
+    //engaged_ = true;
   }
   else
   {
     disengageMotors();
-    engaged_ = false;
+    //engaged_ = false;
   }
 
   state_mutex_.unlock();
 
-  return true;
+  return (req.engaged == engaged_);
 }
 
 bool AsctecProc::getEngaged(mav_msgs::GetEngaged::Request  &req,
                             mav_msgs::GetEngaged::Response &res)
 {
+  // return the state of the motors
   return engaged_;
 }
 
 void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
 {
-  //ROS_INFO("status callback");
+  // save the state of the motors
   engaged_ = ll_status_msg->flying;
 }
 
@@ -174,7 +170,9 @@ void AsctecProc::stateCallback (const mav_msgs::StatePtr& state_msg)
 
 void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
 {
-  if (state_) return;
+  if (!engaged_) return;
+
+  state_mutex_.lock();
  
   // translate from cmd_roll [-1.0 to 1.0] to ctrl_roll [-2047 .. 2047],
   int ctrl_roll = (int)(cmd_roll_msg->data * asctec::ROS_TO_ASC_ROLL);
@@ -194,15 +192,19 @@ void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
   }
 
   // change roll in message and publish
-  ctrl_mutex_.lock();
+  //ctrl_mutex_.lock();
   ctrl_input_msg_->roll = ctrl_roll;
   publishCtrlInputMsg();
-  ctrl_mutex_.unlock();
+  //ctrl_mutex_.unlock();
+
+  state_mutex_.unlock();
 }
 
 void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg)
 {
-  if (state_) return;
+  if (!engaged_) return;
+
+  state_mutex_.lock();
  
   // translate from cmd_pitch [-1.0 to 1.0] to ctrl_pitch [-2047 .. 2047],
   int ctrl_pitch = (int)(cmd_pitch_msg->data * asctec::ROS_TO_ASC_PITCH);
@@ -222,15 +224,19 @@ void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg
   }
 
   // change pitch in message and publish
-  ctrl_mutex_.lock();
+  //ctrl_mutex_.lock();
   ctrl_input_msg_->pitch = ctrl_pitch;
   publishCtrlInputMsg();
-  ctrl_mutex_.unlock();
+  //ctrl_mutex_.unlock();
+
+  state_mutex_.unlock();
 }
 
 void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_msg)
 {
-  if (state_) return;
+  if (!engaged_) return;
+
+  state_mutex_.lock();
 
   // translate from cmd_yaw [rad/s] to ctrl_yaw [-2047 .. 2047],
   int ctrl_yaw = (int)(cmd_yaw_rate_msg->data * asctec::ROS_TO_ASC_YAW_RATE);
@@ -250,15 +256,19 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_ms
   }
 
   // change yaw in message and publish
-  ctrl_mutex_.lock();
+  //ctrl_mutex_.lock();
   ctrl_input_msg_->yaw = ctrl_yaw;
   publishCtrlInputMsg();
-  ctrl_mutex_.unlock();
+  //ctrl_mutex_.unlock();
+
+  state_mutex_.unlock();
 }
 
 void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_msg)
 {
-  if (state_) return;
+  if (!engaged_) return;
+
+  state_mutex_.lock();
 
   // translate from cmd_thrust [0.0 to 1.0] to ctrl_thrust [0 to 4095],
   int ctrl_thrust = (int)(cmd_thrust_msg->data * asctec::ROS_TO_ASC_THRUST);
@@ -278,10 +288,12 @@ void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_m
   }
 
   // change thrust in message and publish
-  ctrl_mutex_.lock();
+  //ctrl_mutex_.lock();
   ctrl_input_msg_->thrust = ctrl_thrust;
   publishCtrlInputMsg();
-  ctrl_mutex_.unlock();
+  //ctrl_mutex_.unlock();
+
+  state_mutex_.unlock();
 }
 
 void AsctecProc::imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg)
@@ -397,19 +409,22 @@ void AsctecProc::engageMotors()
   // set the stick to lower left, wait for motors to engage, 
   // and reset stick
 
-  ROS_DEBUG ("Engaging motors...");
+  ROS_INFO ("Engaging motors...");
 
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
-  while(!engaged_)
+  for (int i = 0; i < 30; ++i)
+  //while(!engaged_)
   {
+    if (engaged_) break;
+    printf("\tt\n");
     ros::Duration(0.1).sleep();
     ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
   }
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
 
-  ROS_DEBUG("Done engaging motors.");
+  ROS_INFO("Done engaging motors.");
 }
 
 void AsctecProc::disengageMotors()
@@ -417,19 +432,22 @@ void AsctecProc::disengageMotors()
   // set the stick to lower left, wait for motors to disengage, 
   // and reset stick
 
-  ROS_DEBUG ("Disengaging motors...");
+  ROS_INFO ("Disengaging motors...");
 
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
-  while(engaged_)
+  for (int i = 0; i < 30; ++i)
+  //while(engaged_)
   {
+    if (!engaged_) break;
+    printf("\tt\n");
     ros::Duration(0.1).sleep();
     ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
   }
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
 
-  ROS_DEBUG("Done disengaging motors.");
+  ROS_INFO("Done disengaging motors.");
 }
 
 void AsctecProc::assembleCtrlCommands()
