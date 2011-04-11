@@ -68,7 +68,7 @@ class AsctecProc
     bool state_;    // state is currently being modified
 
     boost::mutex state_mutex_;
-    boost::mutex ctrl_mutex_;
+
     asctec_msgs::CtrlInputPtr ctrl_input_msg_;        // periodically sent to autopilot
     asctec_msgs::CtrlInputPtr ctrl_input_toggle_msg_; // stick to the lower left
     asctec_msgs::CtrlInputPtr ctrl_input_zero_msg_;   // zero message (sticks centered)
@@ -78,6 +78,8 @@ class AsctecProc
     mav_msgs::HeightPtr height_filtered_msg_;
 
     bool engaged_;
+    bool engaging_;
+
     int prev_state_;
 
     // **** parameters
