@@ -92,11 +92,11 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
   if(enable_state_changes_)
   {
     set_motors_on_off_srv_ = nh_procdata.advertiseService(
-      "SetMotorsOnOff", &AsctecProc::setMotorsOnOff, this);
+      "setMotorsOnOff", &AsctecProc::setMotorsOnOff, this);
   }
 
   get_motors_on_off_srv_ = nh_procdata.advertiseService(
-    "GetMotorsOnOff", &AsctecProc::getMotorsOnOff, this);
+    "getMotorsOnOff", &AsctecProc::getMotorsOnOff, this);
 }
 
 AsctecProc::~AsctecProc()
