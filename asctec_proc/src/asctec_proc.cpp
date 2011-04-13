@@ -158,7 +158,10 @@ bool AsctecProc::getMotorsOnOff(mav_msgs::GetMotorsOnOff::Request  &req,
                                 mav_msgs::GetMotorsOnOff::Response &res)
 {
   state_mutex_.lock();
-  return motors_on_;
+  res.on = motors_on_;
+  state_mutex_.unlock();
+
+  return true;
 }
 
 void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
