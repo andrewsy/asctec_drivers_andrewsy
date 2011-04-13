@@ -15,8 +15,8 @@
 #include <boost/thread/mutex.hpp>
 #include <tf/transform_datatypes.h>
 
-#include "mav_msgs/Engage.h"
-#include "mav_msgs/GetEngaged.h"
+#include <mav_msgs/SetMotorsOnOff.h>
+#include <mav_msgs/GetMotorsOnOff.h>
 
 namespace asctec
 {
@@ -60,12 +60,10 @@ class AsctecProc
     ros::Publisher height_filtered_publisher_;
     ros::Publisher ctrl_input_publisher_;
 
-    ros::ServiceServer engage_srv_;
-    ros::ServiceServer get_engaged_srv_;
+    ros::ServiceServer set_motors_on_off_srv_;
+    ros::ServiceServer get_motors_on_off_srv_;
 
     // **** state variables
-
-    bool state_;    // state is currently being modified
 
     boost::mutex state_mutex_;
 
@@ -77,10 +75,8 @@ class AsctecProc
     mav_msgs::HeightPtr height_msg_;
     mav_msgs::HeightPtr height_filtered_msg_;
 
-    bool engaged_;
+    bool motors_on_;
     bool engaging_;
-
-    int prev_state_;
 
     // **** parameters
 
@@ -89,7 +85,7 @@ class AsctecProc
     bool enable_ctrl_pitch_;
     bool enable_ctrl_yaw_;
 
-    bool enable_state_changes_;   // if true, monitor state, turn on/iff 
+    bool enable_state_changes_;   // if true, allow motor on/off service
 
     int max_ctrl_thrust_;   // max output - in asctec units
     int max_ctrl_roll_; 
@@ -113,14 +109,14 @@ class AsctecProc
     void createHeightMsg        (const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
     void createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
 
-    void engageMotors();
-    void disengageMotors();
+    void startMotors();
+    void stopMotors();
     void publishCtrlInputMsg();
 
-    bool engage(mav_msgs::Engage::Request  &req,
-                mav_msgs::Engage::Response &res);
-    bool getEngaged(mav_msgs::GetEngaged::Request  &req,
-                    mav_msgs::GetEngaged::Response &res);
+    bool setMotorsOnOff(mav_msgs::SetMotorsOnOff::Request  &req,
+                        mav_msgs::SetMotorsOnOff::Response &res);
+    bool getMotorsOnOff(mav_msgs::GetMotorsOnOff::Request  &req,
+                        mav_msgs::GetMotorsOnOff::Response &res);
 
   public:
 

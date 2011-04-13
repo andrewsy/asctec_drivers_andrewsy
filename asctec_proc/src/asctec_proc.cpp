@@ -39,11 +39,9 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
 
   // **** initialize vaiables
 
-  state_ = false;
-  engaged_ = false;
+  motors_on_ = false;
   engaging_ = false;
 
-  prev_state_ = mav::OFF;
   imu_msg_             = boost::make_shared<sensor_msgs::Imu>();
   height_msg_          = boost::make_shared<mav_msgs::Height>();
   height_filtered_msg_ = boost::make_shared<mav_msgs::Height>();
@@ -93,11 +91,12 @@ AsctecProc::AsctecProc(ros::NodeHandle nh, ros::NodeHandle nh_private):
 
   if(enable_state_changes_)
   {
-    engage_srv_      = nh_procdata.advertiseService(
-      "engage",     &AsctecProc::engage,    this);
+    set_motors_on_off_srv_ = nh_procdata.advertiseService(
+      "SetMotorsOnOff", &AsctecProc::setMotorsOnOff, this);
   }
-  get_engaged_srv_ = nh_procdata.advertiseService(
-    "getEngaged", &AsctecProc::getEngaged, this);
+
+  get_motors_on_off_srv_ = nh_procdata.advertiseService(
+    "GetMotorsOnOff", &AsctecProc::getMotorsOnOff, this);
 }
 
 AsctecProc::~AsctecProc()
@@ -130,66 +129,47 @@ void AsctecProc::initializeParams()
     max_ctrl_yaw_ = 2047;
 }
 
-bool AsctecProc::engage(mav_msgs::Engage::Request  &req,
-                        mav_msgs::Engage::Response &res)
+bool AsctecProc::setMotorsOnOff(mav_msgs::SetMotorsOnOff::Request  &req,
+                                mav_msgs::SetMotorsOnOff::Response &res)
 {
   state_mutex_.lock();
   engaging_ = true;
 
-  if (req.engaged && !engaged_)
+  if (req.on && !motors_on_)
   {
     ctrl_input_msg_->roll = 0;
     ctrl_input_msg_->pitch = 0;
     ctrl_input_msg_->yaw = 0;
     ctrl_input_msg_->thrust = 0;
-    engageMotors();
+    startMotors();
   }
   else
   {
-    disengageMotors();
+    stopMotors();
   }
 
   engaging_ = false;
   state_mutex_.unlock();
 
-  return (req.engaged == engaged_);
+  return (req.on == motors_on_);
 }
 
-bool AsctecProc::getEngaged(mav_msgs::GetEngaged::Request  &req,
-                            mav_msgs::GetEngaged::Response &res)
+bool AsctecProc::getMotorsOnOff(mav_msgs::GetMotorsOnOff::Request  &req,
+                                mav_msgs::GetMotorsOnOff::Response &res)
 {
-  // return the state of the motors
-  return engaged_;
+  state_mutex_.lock();
+  return motors_on_;
 }
 
 void AsctecProc::llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg)
 {
   // save the state of the motors
-  engaged_ = ll_status_msg->flying;
+  motors_on_ = ll_status_msg->flying;
 }
-
-/*
-void AsctecProc::stateCallback (const mav_msgs::StatePtr& state_msg)
-{
-  state_mutex_.lock();
-  state_ = true;
-  ROS_DEBUG("State callback, %d", state_msg->state);
-
-  // detects changes in mav state, and engages/disengages motors
-
-  if (prev_state_ == mav::OFF && state_msg->state == mav::IDLE)
-    engageMotors();
-  else if (prev_state_ == mav::IDLE && state_msg->state == mav::OFF)
-    disengageMotors();
-
-  prev_state_ = state_msg->state;
-  state_ = false;
-  state_mutex_.unlock();
-}*/
 
 void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
 {
-  if (!engaged_ || engaging_) return;
+  if (!motors_on_ || engaging_) return;
 
   state_mutex_.lock();
  
@@ -219,7 +199,7 @@ void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
 
 void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg)
 {
-  if (!engaged_ || engaging_) return;
+  if (!motors_on_ || engaging_) return;
 
   state_mutex_.lock();
  
@@ -249,7 +229,7 @@ void AsctecProc::cmdPitchCallback(const std_msgs::Float64ConstPtr& cmd_pitch_msg
 
 void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_msg)
 {
-  if (!engaged_ || engaging_) return;
+  if (!motors_on_ || engaging_) return;
 
   state_mutex_.lock();
 
@@ -279,7 +259,7 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_ms
 
 void AsctecProc::cmdThrustCallback(const std_msgs::Float64ConstPtr& cmd_thrust_msg)
 {
-  if (!engaged_ || engaging_) return;
+  if (!motors_on_ || engaging_) return;
 
   state_mutex_.lock();
 
@@ -415,18 +395,18 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcda
   imu_msg_->orientation.w = orientation.getW();
 }
 
-void AsctecProc::engageMotors()
+void AsctecProc::startMotors()
 {
   // set the stick to lower left, wait for motors to engage, 
   // and reset stick
 
-  ROS_INFO ("Engaging motors...");
+  ROS_INFO ("Starting motors...");
 
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
   for (int i = 0; i < 15; ++i)
   {
-    if (engaged_) break;
+    if (motors_on_) break;
     //printf("\tt\n");
     ros::Duration(0.20).sleep();
     ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
@@ -434,21 +414,21 @@ void AsctecProc::engageMotors()
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
 
-  ROS_INFO("Done engaging motors.");
+  ROS_INFO("Motors are ON");
 }
 
-void AsctecProc::disengageMotors()
+void AsctecProc::stopMotors()
 {
   // set the stick to lower left, wait for motors to disengage, 
   // and reset stick
 
-  ROS_INFO ("Disengaging motors...");
+  ROS_INFO ("Stopping motors...");
 
   ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
 
   for (int i = 0; i < 15; ++i)
   {
-    if (!engaged_) break;
+    if (!motors_on_) break;
     //printf("\tt\n");
     ros::Duration(0.20).sleep();
     ctrl_input_publisher_.publish(ctrl_input_toggle_msg_);
@@ -456,7 +436,7 @@ void AsctecProc::disengageMotors()
 
   ctrl_input_publisher_.publish(ctrl_input_zero_msg_);
 
-  ROS_INFO("Done disengaging motors.");
+  ROS_INFO("Motors are OFF");
 }
 
 void AsctecProc::assembleCtrlCommands()
