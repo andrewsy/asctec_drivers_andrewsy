@@ -253,9 +253,6 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_ms
     ctrl_yaw = -max_ctrl_yaw_;
   }
 
-  if (ctrl_yaw >  100 && ctrl_yaw <  350) ctrl_yaw =  350;
-  if (ctrl_yaw < -100 && ctrl_yaw > -350) ctrl_yaw = -350;
-
   // change yaw in message and publish
   ctrl_input_msg_->yaw = ctrl_yaw;
   publishCtrlInputMsg();
