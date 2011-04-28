@@ -179,7 +179,7 @@ void AsctecProc::cmdRollCallback(const std_msgs::Float64ConstPtr& cmd_roll_msg)
   // translate from cmd_roll [-1.0 to 1.0] to ctrl_roll [-2047 .. 2047],
   int ctrl_roll = (int)(cmd_roll_msg->data * asctec::ROS_TO_ASC_ROLL);
 
-  ROS_DEBUG ("cmd_roll received: %f (%d)", cmd_roll_msg->data, ctrl_roll);
+  ROS_INFO ("cmd_roll received: %f (%d)", cmd_roll_msg->data, ctrl_roll);
 
   // limit min/max output
   if (ctrl_roll > max_ctrl_roll_)
@@ -239,7 +239,7 @@ void AsctecProc::cmdYawCallback(const std_msgs::Float64ConstPtr& cmd_yaw_rate_ms
   // translate from cmd_yaw [rad/s] to ctrl_yaw [-2047 .. 2047],
   int ctrl_yaw = (int)(cmd_yaw_rate_msg->data * asctec::ROS_TO_ASC_YAW_RATE);
 
-  ROS_INFO ("cmd_yaw received: %f (%d)", cmd_yaw_rate_msg->data, ctrl_yaw);
+  ROS_DEBUG ("cmd_yaw received: %f (%d)", cmd_yaw_rate_msg->data, ctrl_yaw);
 
   // limit min/max output
   if (ctrl_yaw > max_ctrl_yaw_)
