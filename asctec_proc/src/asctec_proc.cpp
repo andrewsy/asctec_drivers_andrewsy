@@ -352,9 +352,9 @@ void AsctecProc::createImuMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcda
   imu_msg_->header.frame_id = "imu";
 
   // copy over linear acceleration
-  imu_msg_->linear_acceleration.x = imu_calcdata_msg->acc_x_calib * asctec::ASC_TO_ROS_ACC;
-  imu_msg_->linear_acceleration.y = imu_calcdata_msg->acc_y_calib * asctec::ASC_TO_ROS_ACC;
-  imu_msg_->linear_acceleration.z = imu_calcdata_msg->acc_z_calib * asctec::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.x = imu_calcdata_msg->acc_x * asctec::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.y = imu_calcdata_msg->acc_y * asctec::ASC_TO_ROS_ACC;
+  imu_msg_->linear_acceleration.z = imu_calcdata_msg->acc_z * asctec::ASC_TO_ROS_ACC * -1.0;
 
 /* // Uncomment these if you use covariances
   // define linear acceleration variance
