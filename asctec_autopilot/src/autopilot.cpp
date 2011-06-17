@@ -100,12 +100,12 @@ namespace asctec
 
     // **** set up intefaces
 
-    serialInterface_ = new asctec::SerialInterface::SerialInterface (port_, speed_);
+    serialInterface_ = new asctec::SerialInterface(port_, speed_);
     serialInterface_->serialport_bytes_rx_ = 0;
     serialInterface_->serialport_bytes_tx_ = 0;
 
     ros::NodeHandle nh_rawdata(nh_, asctec::ROS_NAMESPACE);    // publish to "asctec" namespace
-    telemetry_ = new asctec::Telemetry::Telemetry(nh_rawdata);
+    telemetry_ = new asctec::Telemetry(nh_rawdata);
 
     // Diagnostics
     diag_updater_.add("AscTec Autopilot Status", this, &AutoPilot::diagnostics);
