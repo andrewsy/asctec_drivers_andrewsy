@@ -67,13 +67,13 @@ class AsctecProc
 
     boost::mutex state_mutex_;
 
-    asctec_msgs::CtrlInputPtr ctrl_input_msg_;        // periodically sent to autopilot
+    int ctrl_roll_;
+    int ctrl_pitch_;
+    int ctrl_yaw_;
+    int ctrl_thrust_;
+  
     asctec_msgs::CtrlInputPtr ctrl_input_toggle_msg_; // stick to the lower left
     asctec_msgs::CtrlInputPtr ctrl_input_zero_msg_;   // zero message (sticks centered)
-
-    sensor_msgs::ImuPtr imu_msg_;
-    mav_msgs::HeightPtr height_msg_;
-    mav_msgs::HeightPtr height_filtered_msg_;
 
     bool motors_on_;
     bool engaging_;
@@ -105,9 +105,12 @@ class AsctecProc
     void llStatusCallback (const asctec_msgs::LLStatusPtr& ll_status_msg);
     void imuCalcDataCallback(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
 
-    void createImuMsg           (const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
-    void createHeightMsg        (const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
-    void createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg);
+    void createImuMsg           (const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg,
+                                       sensor_msgs::ImuPtr& imu_msg);
+    void createHeightMsg        (const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg,
+                                       mav_msgs::HeightPtr& height_msg);
+    void createHeightFilteredMsg(const asctec_msgs::IMUCalcDataConstPtr& imu_calcdata_msg,
+                                       mav_msgs::HeightPtr& height_filtered_msg);
 
     void startMotors();
     void stopMotors();
