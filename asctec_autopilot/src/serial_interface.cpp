@@ -321,16 +321,16 @@ void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
     if(!telemetry->WaypointCommandsEnabled_) return;
     //ROS_DEBUG ("sendControl started");
     flush();
-    unsigned char cmd[] = ">*>di";
+    //unsigned char cmd[] = ">*>di";
     //telemetry->dumpCTRL_INPUT();
     if (telemetry->controlInterval_ != 0 && ((telemetry->controlCount_ - telemetry->controlOffset_) % telemetry->controlInterval_ == 0)) {
-      if(telemetry->CTRL_INPUT_.chksum != telemetry->CTRL_INPUT_.pitch + telemetry->CTRL_INPUT_.roll + telemetry->CTRL_INPUT_.yaw + telemetry->CTRL_INPUT_.thrust + telemetry->CTRL_INPUT_.ctrl + (short) 0xAAAA){
+      if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT.yaw + telemetry->WAYPOINT.height + telemetry->WAYPOINT.time + telemetry->WAYPOINT.X + telemetry->WAYPOINT.Y + telemetry->WAYPOINT.max_speed + telemetry->WAYPOINT.pos_acc + telemetry->WAYPOINT.properties + telemetry->WAYPOINT.wp_number) {
         //ROS_INFO("invalid CtrlInput checksum: %d !=  %d", telemetry->CTRL_INPUT_.chksum, telemetry->CTRL_INPUT_.pitch + telemetry->CTRL_INPUT_.roll + telemetry->CTRL_INPUT_.yaw + telemetry->CTRL_INPUT_.thrust + telemetry->CTRL_INPUT_.ctrl + (short) 0xAAAA);
         return;
       }
-      output(cmd,5);
+      //output(cmd,5);
       output((unsigned char*) &telemetry->WAYPOINT_COMMAND_, 6);
-      output(() &telemetry->WAYPOINT_, );
+      output((unsigned char*) &telemetry->WAYPOINT_, 224);
       //ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
       wait(5);
       //ROS_INFO("Data Available");
