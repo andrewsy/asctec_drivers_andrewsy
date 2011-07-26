@@ -312,6 +312,50 @@ namespace asctec
     //ROS_INFO ("sendControl completed" );
   }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
+  {
+    int i;
+    char data[5];
+
+    if(!telemetry->WaypointCommandsEnabled_) return;
+    //ROS_DEBUG ("sendControl started");
+    flush();
+    unsigned char cmd[] = ">*>di";
+    //telemetry->dumpCTRL_INPUT();
+    if (telemetry->controlInterval_ != 0 && ((telemetry->controlCount_ - telemetry->controlOffset_) % telemetry->controlInterval_ == 0)) {
+      if(telemetry->CTRL_INPUT_.chksum != telemetry->CTRL_INPUT_.pitch + telemetry->CTRL_INPUT_.roll + telemetry->CTRL_INPUT_.yaw + telemetry->CTRL_INPUT_.thrust + telemetry->CTRL_INPUT_.ctrl + (short) 0xAAAA){
+        //ROS_INFO("invalid CtrlInput checksum: %d !=  %d", telemetry->CTRL_INPUT_.chksum, telemetry->CTRL_INPUT_.pitch + telemetry->CTRL_INPUT_.roll + telemetry->CTRL_INPUT_.yaw + telemetry->CTRL_INPUT_.thrust + telemetry->CTRL_INPUT_.ctrl + (short) 0xAAAA);
+        return;
+      }
+      output(cmd,5);
+      output((unsigned char*) &telemetry->WAYPOINT_COMMAND_, 6);
+      output(() &telemetry->WAYPOINT_, );
+      //ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
+      wait(5);
+      //ROS_INFO("Data Available");
+      i = read (dev_,data,5);
+      if (i != 5) {
+        ROS_ERROR("Control Response : Insufficient Data");
+        flush();
+        return;
+      }
+      if (strncmp(data,">a",2) != 0) {
+        ROS_ERROR("Corrupt Response Header %c%c (%0x%0x)",data[0],data[1],data[0],data[1]);
+        flush();
+        return;
+      }
+      if (strncmp(data+3,"a<",2) != 0) {
+        ROS_ERROR("Corrupt Response Footer %c%c (%0x%0x)",data[3],data[4],data[3],data[4]);
+        flush();
+        return;
+      }
+      ROS_DEBUG("Control Response Code %0x",data[2]);
+    }
+    //ROS_INFO ("sendControl completed" );
+  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   void SerialInterface::sendEstop(Telemetry * telemetry)
   {
     static bool sent_estop_reported = false;

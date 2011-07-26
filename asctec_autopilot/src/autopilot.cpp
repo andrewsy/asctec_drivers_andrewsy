@@ -59,6 +59,12 @@ namespace asctec
     if (!nh_private_.getParam ("enable_CONTROL", enable_CONTROL_))
       enable_CONTROL_ = false;
 
+
+////////////////////////////////////////////
+    if (!nh_private_.getParam ("enable_WAYPOINT_COMMANDS", enable_WAYPOINT_COMMANDS_))
+      enable_WAYPOINT_COMMANDS_ = false;
+////////////////////////////////////////////
+
     if (!nh_private_.getParam ("interval_LL_STATUS", interval_LL_STATUS_))
       interval_LL_STATUS_ = 1;
     if (!nh_private_.getParam ("interval_IMU_RAWDATA", interval_IMU_RAWDATA_))
@@ -139,6 +145,20 @@ namespace asctec
       ROS_INFO("Control Disabled");
     }
     timer_ = nh_private_.createTimer (d, &AutoPilot::spin, this);
+
+    // **** enable waypoint commands//////////////////////////////////
+    if(enable_WAYPOINT_COMMANDS_ == true)
+    {
+      ROS_INFO("Waypoints enabled");
+      telemetry_->enableWaypointCommands(telemetry_,interval_CONTROL_, offset_CONTROL_);
+    }
+    else
+    {
+      ROS_INFO("Waypoints Disabled");
+    }
+    timer_ = nh_private_.createTimer (d, &AutoPilot::spin, this);
+	//////////////////////////////////////////
+
   }
 
   AutoPilot::~AutoPilot ()
@@ -165,6 +185,7 @@ namespace asctec
     else
     {
       serialInterface_->sendControl(telemetry_);
+      serialInterface_->sendWaypointCommands(telemetry_);//////////////////////////////////////////////
     }
     telemetry_->buildRequest();
     telemetry_->requestCount_++;
