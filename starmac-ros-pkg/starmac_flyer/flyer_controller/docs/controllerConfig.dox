@@ -1,0 +1,10 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~KP" : \b [double] Proportional gain min: 0.0, default: 15.0, max: 30.0
+- \b "~KI" : \b [double] Integral gain min: 0.0, default: 1.0, max: 2.0
+- \b "~KD" : \b [double] Derivative gain min: 0.0, default: 15.0, max: 30.0
+- \b "~command_frame" : \b [str] Command frame (internal/external) min: , default: internal, max: 
+- \b "~external_frame_heading" : \b [double] Heading [deg] that external command frame points to min: 0.0, default: 0.0, max: 359.0
+

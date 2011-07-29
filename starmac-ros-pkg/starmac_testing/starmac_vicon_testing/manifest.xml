@@ -1,0 +1,17 @@
+<package>
+  <description brief="starmac_vicon_testing">
+
+     starmac_vicon_testing
+
+  </description>
+  <author>Patrick Bouffard</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/starmac_vicon_testing</url>
+  <depend package="vicon_mocap"/>
+  <depend package="flyer_est"/>
+  <depend package="starmac_tools"/>
+
+</package>
+
+

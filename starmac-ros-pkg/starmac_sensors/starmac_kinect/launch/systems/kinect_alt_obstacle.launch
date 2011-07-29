@@ -1,0 +1,50 @@
+<launch>
+  <arg name="flyer_machine" default="local" />
+  <arg name="flyer_name" default="$(env FLYER_NAME)" />
+  <arg name="kinect_dir" default="$(find kinect_camera)" />
+
+  <node pkg="nodelet" type="nodelet" name="openni_manager" args="manager"
+    output="screen" machine="$(arg flyer_machine)">
+    <rosparam>
+      # Rule of thumb: at least one worker thread per nodelet loaded into
+      # the manager
+      num_worker_threads: 10
+      </rosparam>
+  </node>
+ 
+ 
+  <node pkg="nodelet" type="nodelet" name="openni_camera" args="load openni_camera/OpenNINodelet openni_manager" machine="$(arg flyer_machine)">
+    <remap from="camera" to="kinect" />
+    <param name="device_id" value="#1" /> <!-- use first enumerated device -->
+    <rosparam command="load" file="$(find openni_camera)/info/openni_params.yaml" />
+    <param name="rgb_frame_id" value="/$(arg flyer_name)/openni_rgb_optical_frame" />
+    <param name="depth_frame_id" value="/$(arg flyer_name)/openni_depth_optical_frame" />
+    <param name="use_indices" value="true" />
+  </node>
+
+
+  <include
+    file="$(find starmac_kinect)/launch/systems/find_plane.launch">
+    <arg name="flyer_machine" value="$(arg flyer_machine)" />
+  </include>
+
+  <node pkg="nodelet" type="nodelet" name="kinect_estimator"
+    args="load starmac_kinect_estimator/KinectEstimator openni_manager"
+    machine="$(arg flyer_machine)">
+    <remap from="~model" to="find_plane/model" /> <!-- input -->
+    <remap from="~input" to="kinect/depth/points" /> <!-- input -->
+    <remap from="~indices" to="kinect/plane_indices" />  <!-- input -->
+    <remap from="mask_indices" to="kinect/depth/indices" />  <!-- output -->
+    <rosparam>
+      imu_to_kinect_offset: 0.0
+      obstacle_height_threshold: 0.20 # m
+      obstacle_distance_threshold: 1.0 # m
+      z_vel_filt_a: 0.2
+      z_vel_filt_b: 0.8
+      #debug_throttle_rate: 1.0
+      use_backup_estimator_alt: true
+        </rosparam>
+  </node>
+
+
+</launch>

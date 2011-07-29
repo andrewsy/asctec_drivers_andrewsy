@@ -1,0 +1,21 @@
+K 10
+svn:ignore
+V 44
+.build_version
+.rosgcov_files
+bin
+build
+lib
+
+K 13
+svn:mergeinfo
+V 428
+/branches/ros-0.5/tools/rxtools:4228-4427
+/branches/roscpp-handles/tools/rxtools:4153-4227
+/branches/roscpp_node_removal/tools/rxtools:6042-6187
+/branches/sessions-dec2008/tools/rxtools:2916-3352
+/stacks/ros/branches/cpp_message_overhaul/tools/rxtools:7376-8370,8375
+/stacks/ros/branches/roscpp_connection_retry/tools/rxtools:8633-8660
+/stacks/ros/branches/test_create_release/tools/rxtools:6834-6849
+/tags/rc/tools/rxtools:5045
+END

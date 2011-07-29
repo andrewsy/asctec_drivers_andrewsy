@@ -1,0 +1,101 @@
+<launch>
+    <!-- 
+    pelicans.xml
+    
+    Machine definitions for AscTec Pelicans in Hybrid Systems Lab
+    -->
+     
+    <!-- distros: -->
+    <arg name="ros_cturtle" value="/opt/ros/cturtle"/>
+    <arg name="ros_diamondback" value="/opt/ros/diamondback"/>
+    <arg name="ros_unstable" value="/opt/ros/unstable"/>
+    <arg name="ros_distro" default="$(arg ros_diamondback)"/> <!-- pick one... -->
+    <!-- useful paths -->
+    <arg name="ros_root" value="$(arg ros_distro)/ros"/>
+    <!-- assemble ros-package-path for pelicans: -->
+    <arg name="pelican_ros_package_path" 
+         value="$(env ROS_PACKAGE_PATH)"/> <!-- keep it simple - must have same path on local and pelican -->
+    
+    <!-- PELICAN1 -->
+    <machine name="pelican1" address="pelican1" 
+             user="$(env USER)" ros-package-path="$(arg pelican_ros_package_path)" 
+             ros-root="$(arg ros_root)">
+    </machine>
+    <group ns="pelican1">
+        <!-- values with Kinect mounted:
+        <param name="asctec_adapter/nominal_thrust" value="2200"/>
+        <param name="asctec_adapter/max_thrust" value="2500"/>
+        -->
+        <param name="asctec_adapter/nominal_thrust" value="1925"/>
+        <param name="asctec_adapter/max_thrust" value="2200"/>
+        <rosparam>
+          frames: {
+            vicon_to_imu: {
+              parent: flyer_vicon,
+              child: flyer_imu,
+              translation: [-0.05, 0, -0.3593],
+              rotation: [90, 90, 90]
+              },
+            imu_to_openni_depth_optical: {
+              parent: flyer_imu,
+              child: openni_depth_optical_frame,
+              translation: [0, 0, -0.05],
+              rotation: [45, 0, 65]
+              }
+          }
+        </rosparam>
+    </group>
+    
+    
+    <!-- PELICAN2 -->
+    <machine name="pelican2" address="pelican2" 
+             user="$(env USER)" ros-package-path="$(arg pelican_ros_package_path)" 
+             ros-root="$(arg ros_root)">
+    </machine>
+    <group ns="pelican2">
+        <param name="asctec_adapter/nominal_thrust" value="1800"/>
+        <param name="asctec_adapter/max_thrust" value="2200"/>
+        <rosparam>
+          frames: {
+            vicon_to_imu: {
+              parent: flyer_vicon,
+              child: flyer_imu,
+              translation: [-0.05, 0, -0.3593],
+              rotation: [90, 90, 90]
+              }
+          }
+        </rosparam>
+    </group>
+
+<!-- PELICAN3 -->
+    <machine name="pelican3" address="pelican3" 
+             user="$(env USER)" ros-package-path="$(arg pelican_ros_package_path)" 
+             ros-root="$(arg ros_root)">
+    </machine>
+    <group ns="pelican3">
+        <!-- values with Kinect mounted:
+        <param name="asctec_adapter/nominal_thrust" value="2200"/>
+        <param name="asctec_adapter/max_thrust" value="2500"/>
+        -->
+        <param name="asctec_adapter/nominal_thrust" value="1925"/>
+        <param name="asctec_adapter/max_thrust" value="2200"/>
+        <rosparam>
+          frames: {
+            vicon_to_imu: {
+              parent: flyer_vicon,
+              child: flyer_imu,
+              translation: [-0.05, 0, -0.3593],
+              rotation: [90, 90, 90]
+              },
+            imu_to_openni_depth_optical: {
+              parent: flyer_imu,
+              child: openni_depth_optical_frame,
+              translation: [0, 0, -0.05],
+              rotation: [45, 0, 65]
+              }
+          }
+        </rosparam>
+    </group>
+    
+
+</launch>

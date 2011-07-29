@@ -1,0 +1,27 @@
+<launch>
+  <arg name="sim" default="false"/>
+  <arg if="$(arg sim)" name="flyer_name" value="simflyer1"/>
+  <arg unless="$(arg sim)" name="flyer_name" value="$(env FLYER_NAME)"/>
+
+  <include unless="$(arg sim)" file="$(find starmac_robots_asctec)/launch/pelican.launch">
+    <arg name="record_state_and_inputs" value="true"/>
+  </include>
+
+  <include if="$(arg sim)" file="$(find flyer_common)/launch/bringup_sim.launch">
+    <arg name="record_state_and_inputs" value="true"/>
+  </include>
+
+  <group ns="$(arg flyer_name)">
+    <!-- PARAMETER OVERRIDES -->
+    <rosparam>
+    control_mode_attitude: {
+      external_command_frame: false, 
+      step_input_magnitude: -10.0,
+      step_input_mode_enabled: true,
+      max_roll_cmd: 50,
+      max_pitch_cmd: 50
+    }
+    </rosparam>
+    <param name="asctec_adapter/max_thrust" value="0"/>
+  </group>
+</launch>

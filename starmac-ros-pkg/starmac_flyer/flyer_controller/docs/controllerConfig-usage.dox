@@ -1,0 +1,11 @@
+\subsubsection usage Usage
+\verbatim
+<node name="controller.py" pkg="flyer_controller" type="controller.py">
+  <param name="KP" type="double" value="15.0" />
+  <param name="KI" type="double" value="1.0" />
+  <param name="KD" type="double" value="15.0" />
+  <param name="command_frame" type="str" value="internal" />
+  <param name="external_frame_heading" type="double" value="0.0" />
+</node>
+\endverbatim
+

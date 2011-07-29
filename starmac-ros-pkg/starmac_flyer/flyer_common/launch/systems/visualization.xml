@@ -1,0 +1,11 @@
+<launch>
+  <arg name="subscriber_topic_prefix" default=""/>
+  <node pkg="starmac_viz" type="flyer_viz.py" name="flyer_viz">
+    <param name="subscriber_topic_prefix" value="$(arg subscriber_topic_prefix)"/>
+    <param name="publish_freq" value="5.0"/>
+  </node>
+      
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find starmac_viz)/flyer_viz.vcg">
+  </node>
+
+</launch>

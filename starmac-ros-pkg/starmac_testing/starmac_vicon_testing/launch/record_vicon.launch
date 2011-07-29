@@ -1,0 +1,50 @@
+<launch>
+
+<!-- 
+record_vicon.launch
+
+Record all data for given subject/segment to bag file.
+
+-->
+
+  <arg name="vicon_gateway_machine" default="lynx"/>
+  <arg name="subject_name" default="pelican1"/>
+  <arg name="segment_name" default="pelican1"/>
+  <arg name="tag" default=""/> <!-- string to include in bagfile prefix -->
+  
+  <!-- MACHINE DEFINITIONS -->
+  <group>
+    <include file="$(find flyer_common)/launch/machines/local.xml"/>
+    <include file="$(find flyer_common)/launch/machines/lab_machines.xml"/>
+    <include file="$(find starmac_robots_asctec)/launch/machines/pelicans.xml"/>
+  </group>
+  
+  <group>
+    <node pkg="vicon_mocap" type="vicon_recv_direct" name="vicon_recv_direct"
+      machine="$(arg vicon_gateway_machine)">
+      <rosparam>
+        stream_mode: ClientPullPreFetch
+        datastream_hostport: 192.168.1.2:801
+        update_rate: 200 # rate in Hz to check Vicon API for new data
+        vicon_capture_rate: 100 # rate in Hz that Vicon is set to capture at
+      </rosparam>
+      <param name="subject_name" value="$(arg subject_name)" type="str" />
+      <param name="segment_name" value="$(arg segment_name)" type="str" />
+      <param name="tf_ref_frame_id" value="/enu" type="str" />
+      <param name="tf_tracked_frame_id" value="$(arg subject_name)/vicon"
+        type="str" />
+    </node>
+    
+    <node pkg="rostopic" type="rostopic" name="rostopic" args="echo vicon_recv_direct/output" launch-prefix="xterm -e">
+    </node>
+    
+    <node pkg="runtime_monitor" type="monitor" name="monitor"/>
+    
+    <node pkg="rosbag" type="rosbag" name="record_bag" 
+    args="record -o $(arg tag)_vicon
+            vicon_recv_direct/output"
+    output="screen"
+    machine="$(arg vicon_gateway_machine)"/>
+    
+  </group>
+</launch>

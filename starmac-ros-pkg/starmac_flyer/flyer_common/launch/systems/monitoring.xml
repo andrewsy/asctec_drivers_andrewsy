@@ -1,0 +1,15 @@
+<launch>
+
+    <node if="false" pkg="flyer_controller" type="topic_monitors.bsh" name="topic_monitors"/>
+
+    <node pkg="runtime_monitor" type="monitor" name="runtime_monitor" machine="local">
+      <remap from="/diagnostics" to="downlink/diagnostics"/>
+    </node>
+    
+    <node pkg="rxtools" type="rxconsole" name="rxconsole" machine="local"/>
+    
+    <node if="false" pkg="starmac_tools" type="program_runner.py" name="run_htop" 
+          machine="local" args="ssh -t pelican2 nice -n 20 htop" 
+          launch-prefix="xterm -e"/>
+
+</launch>

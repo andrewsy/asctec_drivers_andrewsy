@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- ASCTEC-SPECIFIC MONITORING -->
+  <node pkg="asctec_mon" name="monitor" type="monitor.py" respawn="false" required="false" launch-prefix="xterm -title 'AscTec Monitor' -e" machine="local">
+    <remap from="asctec/IMU_CALCDATA" to="downlink/asctec/IMU_CALCDATA"/>
+    <remap from="asctec/LL_STATUS" to="downlink/asctec/LL_STATUS"/>
+  </node>
+  
+</launch>

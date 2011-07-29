@@ -1,0 +1,18 @@
+<stack>
+  <description brief="starmac_testing">
+  Stack for testing launch files, etc. May have onerous dependencies but that's
+  okay, the idea is to have the tests and their dependencies here rather than putting
+  tests in individual stacks and potentially adding extraneous dependencies to those
+  stacks just so their tests will work. E.g. when testing vicon, might also want
+  to run estimator, but in general vicon_mocap shouldn't depend on flyer_est.
+  </description>
+  <author>Maintained by Patrick Bouffard</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/starmac_testing</url>
+  <depend stack="ros" />
+  <depend stack="starmac_vicon" />
+  <depend stack="starmac_flyer" />
+  <depend stack="starmac_mpc" />
+
+</stack>

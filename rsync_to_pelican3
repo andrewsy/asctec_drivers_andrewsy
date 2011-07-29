@@ -1,0 +1,2 @@
+#!/bin/bash
+rsync -az --progress ${HOME}/ros/ pelican3:ros/

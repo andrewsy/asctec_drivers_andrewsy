@@ -1,0 +1,24 @@
+<launch>
+  <arg name="odom_topic" default="estimator/output"/>
+  <arg name="topic_prefix" default=""/>
+  <arg name="rxplot_opts" value="-p 60 -b 90 -m . -r 2000"/>
+  
+  <!-- PLOTTING -->
+  <node pkg="rxtools" type="rxplot" name="plots_controller_mux" args="
+      $(arg topic_prefix)controller_mux/output/roll_cmd:pitch_cmd:yaw_cmd:yaw_rate_cmd
+      $(arg topic_prefix)controller_mux/output/motors_on:alt_cmd:thrust_cmd
+      $(arg rxplot_opts) -P -t controller_mux"/>
+  <node pkg="rxtools" type="rxplot" name="plots_joy" args="
+      joy/axes[0]:axes[1]:axes[2]:axes[3]
+      joy/buttons[0]:buttons[2]:buttons[6]:buttons[8]
+      $(arg rxplot_opts) -P -t joystick"/>
+  <node pkg="rxtools" type="rxplot" name="plots_est" args="
+      $(arg topic_prefix)$(arg odom_topic)/pose/pose/position/x:y:z
+      $(arg topic_prefix)$(arg odom_topic)/twist/twist/linear/x:y:z
+      $(arg rxplot_opts) -P -t 'estimator (linear)'"/>
+  <node pkg="rxtools" type="rxplot" name="plots_est2" args="
+      $(arg topic_prefix)$(arg odom_topic)/pose/pose/orientation/x:y:z:w
+      $(arg topic_prefix)$(arg odom_topic)/twist/twist/angular/x:y:z
+      $(arg rxplot_opts) -P -t 'estimator (angular)'"/>
+
+</launch>

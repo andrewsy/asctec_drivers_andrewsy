@@ -1,0 +1,25 @@
+<launch>
+    
+    <!-- 
+    lab_machines.xml
+    
+    Machine definitions for AscTec Pelicans in Hybrid Systems Lab
+    -->
+     
+    <arg name="lynx_ros_pkg_path_prepend" default=""/>
+    <!-- distros: -->
+    <arg name="ros_diamondback" value="/opt/ros/diamondback"/>
+    <arg name="ros_distro" default="$(arg ros_diamondback)"/>
+    <!-- useful paths -->
+    <arg name="ros_root" value="$(arg ros_distro)/ros"/>
+    <!-- assemble ros-package-path for pelicans: -->
+    <arg name="ros_package_path" 
+         value="$(env ROS_PACKAGE_PATH)"/> <!-- keep it simple - must have same path on local and pelican -->
+    
+    <!-- LYNX - VICON BRIDGE -->
+    <machine name="lynx" address="$(env VICON_BRIDGE_HOSTNAME)" 
+             user="$(env USER)" ros-package-path="$(arg ros_package_path)" 
+             ros-root="$(arg ros_root)">
+    </machine>
+    
+</launch>

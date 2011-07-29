@@ -1,0 +1,44 @@
+<launch>
+  <arg name="sim" default="false"/>
+  <arg if="$(arg sim)" name="flyer_name" value="simflyer1"/>
+  <arg unless="$(arg sim)" name="flyer_name" value="$(env FLYER_NAME)"/>
+
+  <include unless="$(arg sim)" file="$(find starmac_robots_asctec)/launch/pelican.launch">
+    <arg name="record_state_and_inputs" value="true"/>
+    <arg name="standby_modes" value="hover mpc"/>
+  </include>
+
+  <include if="$(arg sim)" file="$(find flyer_common)/launch/bringup_sim.launch">
+    <arg name="record_state_and_inputs" value="true"/>
+    <arg name="standby_modes" value="hover mpc"/>
+  </include>
+
+  <group ns="$(arg flyer_name)">
+    <node name="control_mode_mpc" pkg="nodelet" type="nodelet" args="load starmac_mpc_controller/ControlModeMPC manager" machine="$(arg flyer_name)">
+      <rosparam>
+        external_command_frame: true
+        external_frame_heading: 180
+        max_roll_cmd: 20
+        max_pitch_cmd: 20
+        max_yaw_rate_cmd: 50
+        control_output_rate: 40
+        yaw_deadband: 0.25
+        ignore_ang_vel: false
+      </rosparam>
+    </node>
+  
+    <!-- PARAMETER OVERRIDES -->
+      <rosparam>
+        control_mode_attitude: {
+        external_command_frame: true,
+        external_frame_heading: 180
+        }
+      </rosparam>
+      <rosparam>
+        asctec_adapter: {
+        roll_trim: 0, # deg
+        pitch_trim: 0 # deg
+        }
+     </rosparam>
+  </group>
+</launch>

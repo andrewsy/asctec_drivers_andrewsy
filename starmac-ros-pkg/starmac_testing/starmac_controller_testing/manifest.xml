@@ -1,0 +1,16 @@
+<package>
+  <description brief="starmac_controller_testing">
+
+     starmac_controller_testing
+
+  </description>
+  <author>bouffard</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/starmac_controller_testing</url>
+
+  <depend package="starmac_roshlib"/>
+  <depend package="starmac_mpc_controller"/>
+</package>
+
+

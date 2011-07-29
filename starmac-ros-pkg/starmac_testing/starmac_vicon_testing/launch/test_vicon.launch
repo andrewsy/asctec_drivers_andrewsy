@@ -1,0 +1,78 @@
+<launch>
+  <arg name="machine" default="local"/>
+  <arg name="vicon_gateway_machine" default="lynx"/>
+  <arg name="subject_name" default="pelican1" />
+  <arg name="segment_name" default="pelican1" />
+  <arg name="debug" default="false" />
+  <arg name="no_monitoring" default="false" />
+  <arg name="no_estimator" default="false" />
+  <arg name="flyer_name" default="$(env FLYER_NAME)"/>
+  <arg if="$(arg debug)" name="gdb_launch_prefix" value="xterm -rv -e gdb -ex run -args" />
+  <arg unless="$(arg debug)" name="gdb_launch_prefix" value="" />
+  <arg name="vicon_hostport" default="vicon:801"/>
+  <arg name="vicon_capture_rate" default="120"/>
+  
+
+  <!-- MACHINE DEFINITIONS -->
+  <group>
+    <include file="$(find flyer_common)/launch/machines/local.xml"/>
+    <include file="$(find flyer_common)/launch/machines/lab_machines.xml"/>
+    <include file="$(find starmac_robots_asctec)/launch/machines/pelicans.xml"/>
+  </group>
+
+  <group ns="$(arg flyer_name)">
+    <node pkg="vicon_mocap" type="vicon_recv_direct" name="vicon_recv_direct"
+      launch-prefix="$(arg gdb_launch_prefix)" machine="$(arg vicon_gateway_machine)">
+      <rosparam>
+        stream_mode: ClientPullPreFetch
+        update_rate: 200 # rate in Hz to check Vicon API for new data
+    </rosparam>
+      <param name="vicon_capture_rate" value="$(arg vicon_capture_rate)" type="double"/>
+      <param name="datastream_hostport" value="$(arg vicon_hostport)" type="str"/>
+      <param name="subject_name" value="$(arg subject_name)" type="str" />
+      <param name="segment_name" value="$(arg segment_name)" type="str" />
+      <param name="tf_ref_frame_id" value="/enu" type="str" />
+      <param name="tf_tracked_frame_id" value="$(arg subject_name)/flyer_vicon"
+        type="str" />
+    </node>
+
+
+    <group unless="$(arg no_monitoring)">
+    <!-- ESTIMATOR -->
+    <node unless="$(arg no_estimator)" name="estimator" pkg="nodelet" type="nodelet"
+      args="standalone flyer_est/Estimator"  machine="$(arg machine)">
+      <rosparam>
+        freq: 75
+        xy_vel_filt_a: 0.2
+        xy_vel_filt_b: 0.8
+        z_vel_filt_a: 0.2
+        z_vel_filt_b: 0.8
+    </rosparam>
+    </node>
+    
+    <node pkg="flyer_common" type="static_transforms.py" name="static_transforms"  machine="$(arg machine)">
+      <param name="mode" value="both" type="str" />
+      <param name="flyer" value="$(arg flyer_name)" type="str" />
+      <param name="period" value="500" />
+    </node>
+
+      <!-- MONITORING -->
+      <node pkg="runtime_monitor" type="monitor" name="monitor" />
+      <!-- <node pkg="rviz" type="rviz" name="rviz" /> -->
+
+      <include file="$(find flyer_common)/launch/systems/visualization.xml">
+      </include>
+
+      <node pkg="rxtools" type="rxconsole" name="rxconsole" />
+      <node pkg="rxtools" type="rxplot" name="plots_est"
+        args="estimator/output/pose/pose/position/x:y:z
+              estimator/output/twist/twist/linear/x:y:z
+              -p 20 -b 20 -m ." />
+      <node pkg="rxtools" type="rxplot" name="plots_vicon"
+        args="vicon_recv_direct/output/transform/translation/x:y:z
+              vicon_recv_direct/output/transform/rotation/x:y:z:w
+              -p 20 -b 20 -m ." />
+    </group>
+  </group>
+
+</launch>

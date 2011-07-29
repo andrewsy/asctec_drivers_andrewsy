@@ -1,0 +1,21 @@
+<launch>
+
+  <include file="$(find flyer_common)/launch/bringup_sim.launch">
+    <arg name="standby_modes" value="autosequence"/>
+  </include>
+  
+  <node pkg="rosh" type="rosh" name="patrol" 
+    args="starmac_controller_testing/test_autosequence.py --plugins=rosh_base,rosh_common,rosh_geometry"
+    output="screen"/>
+    
+  <node pkg="rxtools" type="rxconsole" name="rxconsole"/>
+  
+  <node pkg="rostopic" type="rostopic" name="rostopic1" 
+    args="echo /pelican1/control_mode_autosequence/autosequence_info" 
+    launch-prefix="xterm -e"/> 
+
+  <node pkg="rostopic" type="rostopic" name="rostopic2" 
+    args="echo /pelican1/control_mode_autosequence/info" 
+    launch-prefix="xterm -e"/> 
+
+</launch>

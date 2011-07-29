@@ -1,0 +1,15 @@
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/ROSBUILD_genmsg_cpp.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/ROSBUILD_genmsg_lisp.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/ROSBUILD_gensrv_cpp.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/ROSBUILD_gensrv_lisp.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/clean-test-results.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/rosbuild_precompile.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/rosbuild_premsgsrvgen.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/rospack_genmsg.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/rospack_genmsg_libexe.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/rospack_gensrv.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/test.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/test-future.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/test-results.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/test-results-run.dir
+/home/andrewsy/ros/starmac-ros-pkg/starmac_common/starmac_roslib/build/CMakeFiles/tests.dir

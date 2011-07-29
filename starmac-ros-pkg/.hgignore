@@ -1,0 +1,16 @@
+glob:*/build/*
+glob:*.pyc
+glob:*/msg_gen/*
+glob:*/srv_gen/*
+glob:*/src/*/msg/*
+glob:*/src/*/srv/*
+glob:*/src/*/cfg/*
+glob:*/lib/*.so
+glob:*/bin/*
+glob:*/cfg/*.cfgc
+glob:*/cfg/cpp/*/*.h
+glob:*/docs/*
+.cproject
+.project
+glob:.settings/*
+glob:*/s*/src/*_msgs/__init__.py
