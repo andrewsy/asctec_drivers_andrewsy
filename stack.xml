@@ -8,7 +8,7 @@
   <depend stack="diagnostics" /> <!-- diagnostic_updater -->
   <depend stack="geometry" /> <!-- tf -->
   <depend stack="mav_tools" /> <!-- mav_msgs -->
-  <depend stack="nodelet_core" /> <!-- nodelet -->
+  <depend stack="common" /> <!-- nodelet -->
   <depend stack="ros" />
   <depend stack="ros_comm" /> <!-- rospy, std_msgs, roscpp -->
 
