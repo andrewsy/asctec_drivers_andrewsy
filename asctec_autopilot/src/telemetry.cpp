@@ -160,7 +160,7 @@ namespace asctec
         requestPublisher_[msg] = nh_.advertise < asctec_msgs::GPSDataAdvanced > (requestToString (msg).c_str (), 10);
         break;
       case RequestTypes::WAYPOINT:
-        // to be filled in 
+        // to be filled in
         break;
       case RequestTypes::CAM_DATA:
         // to be filled in 
@@ -195,9 +195,8 @@ namespace asctec
     ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
     ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
     ROS_DEBUG ("Telemetry::enableWaypointCommands()");
-    estopSubscriber_ = nh_.subscribe("ESTOP", 1, &Telemetry::estopCallback, telemetry_, ros::TransportHints().tcpNoDelay());
-    controlInterval_ = interval;
-    controlOffset_ = offset;
+    waypointInterval_ = interval;
+    waypointOffset_ = offset;
     WaypointCommandsEnabled_ = true;
   }
 
@@ -512,23 +511,23 @@ namespace asctec
   }
 
 /////////////////////////////////////
-  void Telemetry::copyWaypoint_Command (asctec_msgs::WaypointCommand msg){
-	WAYPOINT_COMMAND_.string = msg.string;
+  void Telemetry::copyWAYPOINT_COMMAND (asctec_msgs::WaypointCommand msg){
+	WAYPOINT_COMMAND_.cmd = msg.cmd;
   }
 
-  void Telemetry::copyWaypoint_Data (asctec_msgs::WaypointData msg){
-	WAYPOINT_DATA_.wp_number = msg.wp_number;
-	WAYPOINT_DATA_.dummy_1 = msg.dummy_1;
-	WAYPOINT_DATA_.dummy_2 = msg.dummy_2;
-	WAYPOINT_DATA_.properties = msg.properties;
-	WAYPOINT_DATA_.max_speed = msg.max_speed;
-	WAYPOINT_DATA_.time = msg.time;
-	WAYPOINT_DATA_.pos_acc = msg.pos_acc;
-	WAYPOINT_DATA_.chksum = msg.chksum;
-	WAYPOINT_DATA_.X = msg.X;
-	WAYPOINT_DATA_.Y = msg.Y;
-	WAYPOINT_DATA_.yaw = msg.yaw;
-	WAYPOINT_DATA_.height = msg.height;
+  void Telemetry::copyWAYPOINT_DATA (asctec_msgs::WaypointData msg){
+	WAYPOINT_.wp_number = msg.wp_number;
+	WAYPOINT_.dummy_1 = msg.dummy_1;
+	WAYPOINT_.dummy_2 = msg.dummy_2;
+	WAYPOINT_.properties = msg.properties;
+	WAYPOINT_.max_speed = msg.max_speed;
+	WAYPOINT_.time = msg.time;
+	WAYPOINT_.pos_acc = msg.pos_acc;
+	WAYPOINT_.chksum = msg.chksum;
+	WAYPOINT_.X = msg.X;
+	WAYPOINT_.Y = msg.Y;
+	WAYPOINT_.yaw = msg.yaw;
+	WAYPOINT_.height = msg.height;
   }
 
 ///////////////////////////////////

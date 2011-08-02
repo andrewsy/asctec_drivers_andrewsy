@@ -319,18 +319,34 @@ void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
     char data[5];
 
     if(!telemetry->WaypointCommandsEnabled_) return;
-    //ROS_DEBUG ("sendControl started");
+    //ROS_DEBUG ("Waypoint enabled started");
     flush();
     //unsigned char cmd[] = ">*>di";
     //telemetry->dumpCTRL_INPUT();
-    if (telemetry->controlInterval_ != 0 && ((telemetry->controlCount_ - telemetry->controlOffset_) % telemetry->controlInterval_ == 0)) {
-      if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT.yaw + telemetry->WAYPOINT.height + telemetry->WAYPOINT.time + telemetry->WAYPOINT.X + telemetry->WAYPOINT.Y + telemetry->WAYPOINT.max_speed + telemetry->WAYPOINT.pos_acc + telemetry->WAYPOINT.properties + telemetry->WAYPOINT.wp_number) {
+    if (telemetry->waypointInterval_ != 0 && ((telemetry->waypointCount_ - telemetry->waypointOffset_) % telemetry->waypointInterval_ == 0)) {
+      if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT_.yaw + telemetry->WAYPOINT_.height + telemetry->WAYPOINT_.time + telemetry->WAYPOINT_.X + telemetry->WAYPOINT_.Y + telemetry->WAYPOINT_.max_speed + telemetry->WAYPOINT_.pos_acc + telemetry->WAYPOINT_.properties + telemetry->WAYPOINT_.wp_number) {
         //ROS_INFO("invalid CtrlInput checksum: %d !=  %d", telemetry->CTRL_INPUT_.chksum, telemetry->CTRL_INPUT_.pitch + telemetry->CTRL_INPUT_.roll + telemetry->CTRL_INPUT_.yaw + telemetry->CTRL_INPUT_.thrust + telemetry->CTRL_INPUT_.ctrl + (short) 0xAAAA);
         return;
       }
       //output(cmd,5);
-      output((unsigned char*) &telemetry->WAYPOINT_COMMAND_, 6);
-      output((unsigned char*) &telemetry->WAYPOINT_, 224);
+      std::string s ;//= &telemetry->WAYPOINT_COMMAND_;
+      char *a=new char[s.size()+1];
+      int same;
+      a[s.size()]=0;
+      memcpy(a,s.c_str(),s.size());
+      output((unsigned char*) a, 5);
+      char temp[5];
+      temp[0] = '>';
+      temp[1] = '*';
+      temp[2] = '>';
+      temp[3] = 'w';
+      temp[4] = 's';
+	
+      same=memcmp ( temp, a, 5);
+      if (same == 0) {
+      	output((unsigned char*) &telemetry->WAYPOINT_, 224);
+      }
+      
       //ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
       wait(5);
       //ROS_INFO("Data Available");

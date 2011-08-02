@@ -30,6 +30,8 @@
 #include "asctec_msgs/GPSData.h"
 #include "asctec_msgs/GPSDataAdvanced.h"
 #include "asctec_msgs/CtrlInput.h"
+#include "asctec_msgs/WaypointData.h"
+#include "asctec_msgs/WaypointCommand.h"
 #include <std_msgs/Bool.h>
 
 namespace asctec
@@ -44,6 +46,7 @@ namespace asctec
       RC_DATA,
       CONTROLLER_OUTPUT,
       GPS_DATA,
+      WAYPOINT_COMMAND,
       WAYPOINT,
       GPS_DATA_ADVANCED,
       CAM_DATA
@@ -115,6 +118,7 @@ namespace asctec
     void publishPackets();
 
     void enableControl (Telemetry * telemetry_, uint8_t interval = 1, uint8_t offset = 0);
+    void enableWaypointCommands (Telemetry * telemetry_, uint8_t interval = 1, uint8_t offset = 0);
         
     void dumpLL_STATUS();
     void dumpIMU_RAWDATA();
@@ -133,12 +137,16 @@ namespace asctec
     void copyGPS_DATA();
     void copyGPS_DATA_ADVANCED();
     void copyCTRL_INPUT(asctec_msgs::CtrlInput msg);
+    void copyWAYPOINT_COMMAND(asctec_msgs::WaypointCommand msg);///////////
+    void copyWAYPOINT_DATA(asctec_msgs::WaypointData msg);///////////////////
     void estopCallback(const std_msgs::Bool msg);
     
     bool pollingEnabled_;
     bool controlEnabled_;
+    bool WaypointCommandsEnabled_;////////////////
     uint16_t requestCount_;
     uint16_t controlCount_;
+    uint16_t waypointCount_;/////////////////////
     std::bitset < 16 > requestPackets_;
     
     static const uint8_t REQUEST_TYPES = 9;
@@ -154,7 +162,11 @@ namespace asctec
 
     uint8_t controlInterval_;
     uint8_t controlOffset_;
+    uint8_t waypointInterval_;///////////
+    uint8_t waypointOffset_;///////////////
     ros::Subscriber controlSubscriber_;
+    ros::Subscriber commandSubscriber_;///////////////////////
+    ros::Subscriber waypointSubscriber_;///////////////////////////
     ros::Subscriber estopSubscriber_;
 
     //packet descriptors
@@ -343,6 +355,11 @@ namespace asctec
       int speed_x_best_estimate;
       int speed_y_best_estimate;
     };
+	
+    struct WAYPOINT_COMMAND
+    {
+    	std::string cmd;
+    };
 
     struct WAYPOINT
     {
@@ -426,6 +443,7 @@ You will receive an acknowledge if a command or a waypoint was received correctl
     struct RC_DATA RC_DATA_;
     struct CONTROLLER_OUTPUT CONTROLLER_OUTPUT_;
     struct GPS_DATA GPS_DATA_;
+    struct WAYPOINT_COMMAND WAYPOINT_COMMAND_;
     struct WAYPOINT WAYPOINT_;
     struct GPS_DATA_ADVANCED GPS_DATA_ADVANCED_;
     struct CTRL_INPUT CTRL_INPUT_;
@@ -433,9 +451,11 @@ You will receive an acknowledge if a command or a waypoint was received correctl
     asctec_msgs::IMURawDataPtr IMURawData_;
     asctec_msgs::IMUCalcDataPtr IMUCalcData_;
     asctec_msgs::RCDataPtr RCData_;
-    asctec_msgs::ControllerOutputPtr ControllerOutput_;
+    asctec_msgs::ControllerOutputPtr ControllerOutput_; 
     asctec_msgs::GPSDataPtr GPSData_;
     asctec_msgs::GPSDataAdvancedPtr GPSDataAdvanced_;
+    asctec_msgs::WaypointDataPtr WaypointData_;////////////////////////////////////
+    asctec_msgs::WaypointCommandPtr WaypointCommand_;/////////////////////////////////
 
     ros::NodeHandle nh_;
     //asctec_msgs::CtrlInput CtrlInput_;

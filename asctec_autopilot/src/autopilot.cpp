@@ -81,6 +81,10 @@ namespace asctec
       interval_GPS_DATA_ADVANCED_ = 1;
     if (!nh_private_.getParam ("interval_CONTROL", interval_CONTROL_))
       interval_CONTROL_ = 1;
+    
+    if (!nh_private_.getParam ("interval_WAYPOINT_COMMANDS", interval_WAYPOINT_COMMANDS_))////////////////
+      interval_WAYPOINT_COMMANDS_ = 1;/////////////////////////////////////////////////////////
+    
 
     if (!nh_private_.getParam ("offset_LL_STATUS", offset_LL_STATUS_))
       offset_LL_STATUS_ = 0;
@@ -98,6 +102,9 @@ namespace asctec
       offset_GPS_DATA_ADVANCED_ = 0;
     if (!nh_private_.getParam ("offset_CONTROL", offset_CONTROL_))
       offset_CONTROL_ = 0;
+    if (!nh_private_.getParam ("offset_WAYPOINT_COMMANDS", offset_WAYPOINT_COMMANDS_))///////////////////////////////////////
+      offset_WAYPOINT_COMMANDS_ = 0;
+
 
     if (freq_ <= 0.0)
       ROS_FATAL ("Invalid frequency param");
@@ -150,7 +157,7 @@ namespace asctec
     if(enable_WAYPOINT_COMMANDS_ == true)
     {
       ROS_INFO("Waypoints enabled");
-      telemetry_->enableWaypointCommands(telemetry_,interval_CONTROL_, offset_CONTROL_);
+      telemetry_->enableWaypointCommands(telemetry_,interval_WAYPOINT_COMMANDS_, offset_WAYPOINT_COMMANDS_);
     }
     else
     {
@@ -182,11 +189,17 @@ namespace asctec
     {
       serialInterface_->sendEstop(telemetry_);
     }
-    else
+    //else if (telemetry_->controlEnabled_ )
+    //{
+    //  serialInterface_->sendControl(telemetry_);
+    //}
+    else //if (telemetry_->WaypointCommandsEnabled_ )
     {
-      serialInterface_->sendControl(telemetry_);
       serialInterface_->sendWaypointCommands(telemetry_);//////////////////////////////////////////////
     }
+
+
+
     telemetry_->buildRequest();
     telemetry_->requestCount_++;
     if (telemetry_->requestPackets_.count() > 0)
