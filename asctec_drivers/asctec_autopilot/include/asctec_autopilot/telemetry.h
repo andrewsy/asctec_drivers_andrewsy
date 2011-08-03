@@ -118,7 +118,7 @@ namespace asctec
     void publishPackets();
 
     void enableControl (Telemetry * telemetry_, uint8_t interval = 1, uint8_t offset = 0);
-    void enableWaypointCommands (Telemetry * telemetry_, uint8_t interval = 1, uint8_t offset = 0);
+    void enableWaypointCommands (Telemetry * telemetry_);
         
     void dumpLL_STATUS();
     void dumpIMU_RAWDATA();
@@ -162,8 +162,6 @@ namespace asctec
 
     uint8_t controlInterval_;
     uint8_t controlOffset_;
-    uint8_t waypointInterval_;///////////
-    uint8_t waypointOffset_;///////////////
     ros::Subscriber controlSubscriber_;
     ros::Subscriber commandSubscriber_;///////////////////////
     ros::Subscriber waypointSubscriber_;///////////////////////////

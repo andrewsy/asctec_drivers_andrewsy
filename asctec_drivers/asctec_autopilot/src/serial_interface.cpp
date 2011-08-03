@@ -316,21 +316,24 @@ namespace asctec
 void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
   {
     int i;
-    char data[5];
+    char data[230];
+    char *cstr;
 
     if(!telemetry->WaypointCommandsEnabled_) return;
     //ROS_DEBUG ("Waypoint enabled started");
     flush();
-    //unsigned char cmd[] = ">*>di";
+    unsigned char cmd[] = ">*>ws";
     //telemetry->dumpCTRL_INPUT();
-    if (telemetry->waypointInterval_ != 0 && ((telemetry->waypointCount_ - telemetry->waypointOffset_) % telemetry->waypointInterval_ == 0)) {
-      if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT_.yaw + telemetry->WAYPOINT_.height + telemetry->WAYPOINT_.time + telemetry->WAYPOINT_.X + telemetry->WAYPOINT_.Y + telemetry->WAYPOINT_.max_speed + telemetry->WAYPOINT_.pos_acc + telemetry->WAYPOINT_.properties + telemetry->WAYPOINT_.wp_number) {
-        //ROS_INFO("invalid CtrlInput checksum: %d !=  %d", telemetry->CTRL_INPUT_.chksum, telemetry->CTRL_INPUT_.pitch + telemetry->CTRL_INPUT_.roll + telemetry->CTRL_INPUT_.yaw + telemetry->CTRL_INPUT_.thrust + telemetry->CTRL_INPUT_.ctrl + (short) 0xAAAA);
-        return;
-      }
+    strcpy(cstr, telemetry->WAYPOINT_COMMAND_.cmd.c_str());
+    output(cstr, 5);
+    if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT_.yaw + telemetry->WAYPOINT_.height + telemetry->WAYPOINT_.time + telemetry->WAYPOINT_.X + telemetry->WAYPOINT_.Y + telemetry->WAYPOINT_.max_speed + telemetry->WAYPOINT_.pos_acc + telemetry->WAYPOINT_.properties + telemetry->WAYPOINT_.wp_number) {
+    return;
+    }
       //output(cmd,5);
-      output((unsigned char*) &telemetry->WAYPOINT_COMMAND_, 6);
-      output((unsigned char*) &telemetry->WAYPOINT_, 224);
+    output(cmd, 5);
+    output((unsigned char*) &telemetry->WAYPOINT_, 224);
+      
+      
       //ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
       wait(5);
       //ROS_INFO("Data Available");
@@ -351,7 +354,6 @@ void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
         return;
       }
       ROS_DEBUG("Control Response Code %0x",data[2]);
-    }
     //ROS_INFO ("sendControl completed" );
   }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

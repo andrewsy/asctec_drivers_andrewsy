@@ -159,10 +159,8 @@ namespace asctec
       case RequestTypes::GPS_DATA_ADVANCED:
         requestPublisher_[msg] = nh_.advertise < asctec_msgs::GPSDataAdvanced > (requestToString (msg).c_str (), 10);
         break;
-      case RequestTypes::WAYPOINT_COMMAND:
-	break;
       case RequestTypes::WAYPOINT:
-        //requestPublisher_[msg] = nh_.advertise < astec_msgs::WaypointData > (requestToString (msg).c_str (), 10); ////////////////
+        // to be filled in
         break;
       case RequestTypes::CAM_DATA:
         // to be filled in 
@@ -190,16 +188,13 @@ namespace asctec
     controlEnabled_ = true;
   }
 ///////////////////////////////////////////////
-  void Telemetry::enableWaypointCommands (Telemetry * telemetry_, uint8_t interval, uint8_t offset)
+  void Telemetry::enableWaypointCommands (Telemetry * telemetry_)
   {
     commandSubscriber_ = nh_.subscribe("WAYCOMMAND", 1, &Telemetry::copyWAYPOINT_COMMAND, telemetry_, ros::TransportHints().tcpNoDelay());
     waypointSubscriber_ = nh_.subscribe("WAYPOINT", 1, &Telemetry::copyWAYPOINT_DATA, telemetry_, ros::TransportHints().tcpNoDelay());
     ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
     ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
     ROS_DEBUG ("Telemetry::enableWaypointCommands()");
-    estopSubscriber_ = nh_.subscribe("ESTOP", 1, &Telemetry::estopCallback, telemetry_, ros::TransportHints().tcpNoDelay());
-    waypointInterval_ = interval;
-    waypointOffset_ = offset;
     WaypointCommandsEnabled_ = true;
   }
 
