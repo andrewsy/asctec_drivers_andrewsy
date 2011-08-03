@@ -188,15 +188,13 @@ namespace asctec
     controlEnabled_ = true;
   }
 ///////////////////////////////////////////////
-  void Telemetry::enableWaypointCommands (Telemetry * telemetry_, uint8_t interval, uint8_t offset)
+  void Telemetry::enableWaypointCommands (Telemetry * telemetry_)
   {
     commandSubscriber_ = nh_.subscribe("WAYCOMMAND", 1, &Telemetry::copyWAYPOINT_COMMAND, telemetry_, ros::TransportHints().tcpNoDelay());
     waypointSubscriber_ = nh_.subscribe("WAYPOINT", 1, &Telemetry::copyWAYPOINT_DATA, telemetry_, ros::TransportHints().tcpNoDelay());
     ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
     ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
     ROS_DEBUG ("Telemetry::enableWaypointCommands()");
-    waypointInterval_ = interval;
-    waypointOffset_ = offset;
     WaypointCommandsEnabled_ = true;
   }
 

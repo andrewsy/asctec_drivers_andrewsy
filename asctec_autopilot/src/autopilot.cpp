@@ -82,9 +82,6 @@ namespace asctec
     if (!nh_private_.getParam ("interval_CONTROL", interval_CONTROL_))
       interval_CONTROL_ = 1;
     
-    if (!nh_private_.getParam ("interval_WAYPOINT_COMMANDS", interval_WAYPOINT_COMMANDS_))////////////////
-      interval_WAYPOINT_COMMANDS_ = 1;/////////////////////////////////////////////////////////
-    
 
     if (!nh_private_.getParam ("offset_LL_STATUS", offset_LL_STATUS_))
       offset_LL_STATUS_ = 0;
@@ -102,8 +99,6 @@ namespace asctec
       offset_GPS_DATA_ADVANCED_ = 0;
     if (!nh_private_.getParam ("offset_CONTROL", offset_CONTROL_))
       offset_CONTROL_ = 0;
-    if (!nh_private_.getParam ("offset_WAYPOINT_COMMANDS", offset_WAYPOINT_COMMANDS_))///////////////////////////////////////
-      offset_WAYPOINT_COMMANDS_ = 0;
 
 
     if (freq_ <= 0.0)
@@ -157,13 +152,13 @@ namespace asctec
     if(enable_WAYPOINT_COMMANDS_ == true)
     {
       ROS_INFO("Waypoints enabled");
-      telemetry_->enableWaypointCommands(telemetry_,interval_WAYPOINT_COMMANDS_, offset_WAYPOINT_COMMANDS_);
+      telemetry_->enableWaypointCommands(telemetry_);
     }
     else
     {
       ROS_INFO("Waypoints Disabled");
     }
-    timer_ = nh_private_.createTimer (d, &AutoPilot::spin, this);
+    timer_ = nh_private_.createTimer (d, &AutoPilot::spin2, this);
 	//////////////////////////////////////////
 
   }
@@ -187,18 +182,17 @@ namespace asctec
     telemetry_->controlCount_++;
     if (telemetry_->estop_)
     {
+      ROS_INFO ("autopilot estop enabled");
       serialInterface_->sendEstop(telemetry_);
     }
-    //else if (telemetry_->controlEnabled_ )
-    //{
-    //  serialInterface_->sendControl(telemetry_);
-    //}
-    else //if (telemetry_->WaypointCommandsEnabled_ )
-    {
-      serialInterface_->sendWaypointCommands(telemetry_);//////////////////////////////////////////////
+    else if (telemetry_->controlEnabled_ ) {
+        ROS_INFO ("autopilot control enabled");
+        serialInterface_->sendControl(telemetry_);
     }
-
-
+    else if (telemetry_->WaypointCommandsEnabled_ ) {
+	ROS_INFO ("autopilot waypoint command enabled");
+        serialInterface_->sendWaypointCommands(telemetry_);/////////////////////////////////////////////
+    }
 
     telemetry_->buildRequest();
     telemetry_->requestCount_++;
@@ -209,6 +203,7 @@ namespace asctec
     last_spin_time_ = e.profile.last_duration.toSec();
     diag_updater_.update();
   }
+
 
   void AutoPilot::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
   {

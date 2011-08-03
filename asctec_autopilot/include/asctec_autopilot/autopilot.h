@@ -80,8 +80,6 @@ namespace asctec
       int interval_CONTROL_;
       int offset_CONTROL_;
       bool enable_WAYPOINT_COMMANDS_;//////////
-      int interval_WAYPOINT_COMMANDS_;///////////
-      int offset_WAYPOINT_COMMANDS_;////////////
 
       SerialInterface* serialInterface_;
       Telemetry* telemetry_;
