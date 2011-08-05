@@ -180,7 +180,7 @@ namespace asctec
   void Telemetry::enableControl (Telemetry * telemetry_, uint8_t interval, uint8_t offset)
   {
     controlSubscriber_ = nh_.subscribe("CTRL_INPUT", 1, &Telemetry::copyCTRL_INPUT, telemetry_, ros::TransportHints().tcpNoDelay());
-    ROS_INFO("Listening to %s data on topic: %s", "CTRL_INPUT","CTRL_INPUT");
+    //ROS_INFO("Listening to %s data on topic: %s", "CTRL_INPUT","CTRL_INPUT");
     ROS_DEBUG ("Telemetry::enableControl()");
     estopSubscriber_ = nh_.subscribe("ESTOP", 1, &Telemetry::estopCallback, telemetry_, ros::TransportHints().tcpNoDelay());
     controlInterval_ = interval;
@@ -190,10 +190,12 @@ namespace asctec
 ///////////////////////////////////////////////
   void Telemetry::enableWaypointCommands (Telemetry * telemetry_)
   {
+    waypointflag_ = false;
+    waypointcommandflag_ = false;
     commandSubscriber_ = nh_.subscribe("WAYCOMMAND", 1, &Telemetry::copyWAYPOINT_COMMAND, telemetry_, ros::TransportHints().tcpNoDelay());
     waypointSubscriber_ = nh_.subscribe("WAYPOINT", 1, &Telemetry::copyWAYPOINT_DATA, telemetry_, ros::TransportHints().tcpNoDelay());
-    ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
-    ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
+    //ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
+    //ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
     ROS_DEBUG ("Telemetry::enableWaypointCommands()");
     WaypointCommandsEnabled_ = true;
   }
@@ -510,10 +512,13 @@ namespace asctec
 
 /////////////////////////////////////
   void Telemetry::copyWAYPOINT_COMMAND (asctec_msgs::WaypointCommand msg){
+	ROS_INFO("COPY WAYPOINT COMMAND");
 	WAYPOINT_COMMAND_.cmd = msg.cmd;
+	waypointcommandflag_ = true;
   }
 
   void Telemetry::copyWAYPOINT_DATA (asctec_msgs::WaypointData msg){
+	ROS_INFO("COPY WAYPOINT DATA");
 	WAYPOINT_.wp_number = msg.wp_number;
 	WAYPOINT_.dummy_1 = msg.dummy_1;
 	WAYPOINT_.dummy_2 = msg.dummy_2;
@@ -526,6 +531,7 @@ namespace asctec
 	WAYPOINT_.Y = msg.Y;
 	WAYPOINT_.yaw = msg.yaw;
 	WAYPOINT_.height = msg.height;
+        waypointflag_ = true;
   }
 
 ///////////////////////////////////

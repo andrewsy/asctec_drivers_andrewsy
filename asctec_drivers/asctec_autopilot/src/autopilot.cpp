@@ -182,16 +182,17 @@ namespace asctec
     telemetry_->controlCount_++;
     if (telemetry_->estop_)
     {
+      ROS_INFO ("autopilot estop enabled");
       serialInterface_->sendEstop(telemetry_);
     }
-    else 
-    { 
-      if (telemetry_->controlEnabled_ )
-         serialInterface_->sendControl(telemetry_);
-      if (telemetry_->WaypointCommandsEnabled_ )
-         serialInterface_->sendWaypointCommands(telemetry_);//////////////////////////////////////////////
+    else {
+//ROS_INFO ("SENDCONTROL");
+        serialInterface_->sendControl(telemetry_);
+//ROS_INFO ("SENDWAYPOINTCMD");
+        serialInterface_->sendWaypointCommands(telemetry_);/////////////////////////////////////////////
+        serialInterface_->sendWaypoint(telemetry_);/////////////////////////////////////////////
     }
-
+	
     telemetry_->buildRequest();
     telemetry_->requestCount_++;
     if (telemetry_->requestPackets_.count() > 0)
@@ -201,6 +202,7 @@ namespace asctec
     last_spin_time_ = e.profile.last_duration.toSec();
     diag_updater_.update();
   }
+
 
   void AutoPilot::diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
   {

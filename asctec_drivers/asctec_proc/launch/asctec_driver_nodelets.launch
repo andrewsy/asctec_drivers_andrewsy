@@ -1,0 +1,43 @@
+<launch>
+
+  	<arg name="real_pelican" default="true"/>
+	<arg name="machine" default="pelican3"/>
+	<arg name="flyer_name" default="$(env FLYER_NAME)"/>
+	<arg if="$(arg real_pelican)" name="flyer_machine" default="$(arg flyer_name)"/>
+	<arg unless="$(arg real_pelican)" name="flyer_machine" value="local"/>
+	<arg name="define_machines" default="true"/> <!-- set to false if you have already defined machines -->
+	<arg name="external_frame_heading" default="90.0"/>
+	<include file="$(find starmac_robots_asctec)/launch/machines/pelicans.xml"/>
+  	#### Nodelet manager ####################################
+
+  	<node pkg="nodelet" type="nodelet" name="pelican_manager" args="manager" output="screen" />
+
+ 	 #### Asctec Autopilot ###################################
+
+  	<node pkg="nodelet" type="nodelet" name="AutoPilotNodelet" args="load asctec_autopilot/AutoPilotNodelet pelican_manager" output="screen" machine="$(arg machine)">
+
+    	<param name="port" type="string" value="/dev/ttyUSB0"/>
+    	<param name="speed" type="int" value="57600"/>
+    	<param name="freq" type="double" value="20.0"/>
+
+    	<param name="enable_IMU_CALCDATA" type="bool" value="true"/>
+    	<param name="interval_IMU_CALCDATA" type="int" value="1"/>
+    	<param name="offset_IMU_CALCDATA" type="int" value="0"/>
+
+    	<param name="enable_LL_STATUS" type="bool" value="true"/>
+    	<param name="interval_LL_STATUS" type="int" value="2"/>
+    	<param name="offset_LL_STATUS" type="int" value="0"/>
+	<param name="enable_WAYPOINT_COMMANDS" type="bool" value="true"/>
+
+  	</node>
+
+  	#### Asctec Proc ########################################
+
+  	<node pkg="nodelet" type="nodelet" name="AsctecProcNodelet" args="load asctec_proc/AsctecProcNodelet pelican_manager" output="screen" machine="$(arg machine)">
+
+  	</node>
+
+</launch>
+
+
+

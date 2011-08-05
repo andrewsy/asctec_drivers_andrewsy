@@ -1,0 +1,39 @@
+<launch>
+	<arg name="real_pelican" default="true"/>
+	<arg name="machine" default="pelican3"/>
+	<arg name="flyer_name" default="$(env FLYER_NAME)"/>
+	<arg if="$(arg real_pelican)" name="flyer_machine" default="$(arg flyer_name)"/>
+	<arg unless="$(arg real_pelican)" name="flyer_machine" value="local"/>
+	<arg name="define_machines" default="true"/> <!-- set to false if you have already defined machines -->
+	<arg name="external_frame_heading" default="90.0"/>
+
+	
+    	<include file="$(find starmac_robots_asctec)/launch/machines/pelicans.xml"/>
+	
+	#### Asctec Autopilot ###################################
+
+	<node pkg="asctec_autopilot" type="autopilot_node" name="AutoPilot" output="screen" respawn="false" required="true" machine="$(arg machine)">
+		<param name="port" type="string" value="/dev/ttyUSB0"/>
+		<param name="speed" type="int" value="57600"/>
+		<param name="freq" type="double" value="20.0"/>
+
+		<param name="enable_IMU_CALCDATA" type="bool" value="true"/>
+		<param name="interval_IMU_CALCDATA" type="int" value="1"/>
+		<param name="offset_IMU_CALCDATA" type="int" value="0"/>
+
+		<param name="enable_LL_STATUS" type="bool" value="true"/>
+		<param name="interval_LL_STATUS" type="int" value="2"/>
+		<param name="offset_LL_STATUS" type="int" value="0"/>
+		<param name="enable_WAYPOINT_COMMANDS" type="bool" value="true"/>
+
+	</node>
+
+	#### Asctec Proc ########################################
+
+	<node pkg="asctec_proc" type="asctec_proc_node" name="AsctecProc" machine="$(arg machine)" output="screen">
+	</node>
+
+</launch>
+
+
+
