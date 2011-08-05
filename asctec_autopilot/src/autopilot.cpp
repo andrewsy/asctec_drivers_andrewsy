@@ -158,7 +158,7 @@ namespace asctec
     {
       ROS_INFO("Waypoints Disabled");
     }
-    timer_ = nh_private_.createTimer (d, &AutoPilot::spin2, this);
+    timer_ = nh_private_.createTimer (d, &AutoPilot::spin, this);
 	//////////////////////////////////////////
 
   }
@@ -185,15 +185,14 @@ namespace asctec
       ROS_INFO ("autopilot estop enabled");
       serialInterface_->sendEstop(telemetry_);
     }
-    else if (telemetry_->controlEnabled_ ) {
-        ROS_INFO ("autopilot control enabled");
+    else {
+//ROS_INFO ("SENDCONTROL");
         serialInterface_->sendControl(telemetry_);
-    }
-    else if (telemetry_->WaypointCommandsEnabled_ ) {
-	ROS_INFO ("autopilot waypoint command enabled");
+ROS_INFO ("SENDWAYPOINTCMD");
         serialInterface_->sendWaypointCommands(telemetry_);/////////////////////////////////////////////
+        serialInterface_->sendWaypoint(telemetry_);/////////////////////////////////////////////
     }
-
+	
     telemetry_->buildRequest();
     telemetry_->requestCount_++;
     if (telemetry_->requestPackets_.count() > 0)

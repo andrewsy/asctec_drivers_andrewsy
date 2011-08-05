@@ -145,7 +145,8 @@ namespace asctec
     bool WaypointCommandsEnabled_;////////////////
     uint16_t requestCount_;
     uint16_t controlCount_;
-    uint16_t waypointCount_;/////////////////////
+    bool waypointflag_;/////////////////////
+    bool waypointcommandflag_;////////////////////
     std::bitset < 16 > requestPackets_;
     
     static const uint8_t REQUEST_TYPES = 9;

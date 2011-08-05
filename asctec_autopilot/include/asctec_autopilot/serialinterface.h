@@ -49,6 +49,7 @@ namespace asctec
     void output (unsigned char *output, int len);
     bool getPackets (Telemetry *telemetry);
     void sendControl (Telemetry *telemetry);
+    void sendWaypoint (Telemetry *telemetry);///////////////
     void sendWaypointCommands (Telemetry *telemetry);//////////////////
     void sendEstop (Telemetry *telemetry);
     void dumpDebug (void);

@@ -51,8 +51,7 @@ namespace asctec
     struct termios tio;
       status = false;
       serialport_baud_ = bitrate (serialport_speed_);
-      ROS_INFO ("Initializing serial port...");
-
+      ROS_INFO ("Initializing serial port abcdef... %s", serialport_name_.c_str());
       dev_ = open(serialport_name_.c_str (),O_RDWR | O_NOCTTY | O_NDELAY);
       ROS_DEBUG ("dev: %d", dev_);
       ROS_ASSERT_MSG (dev_ != -1, "Failed to open serial port: %s %s", serialport_name_.c_str (), strerror (errno));
@@ -288,7 +287,7 @@ namespace asctec
       }
       output(cmd,5);
       output((unsigned char*) &telemetry->CTRL_INPUT_, 12);
-      ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
+    //  ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
       wait(5);
       //ROS_INFO("Data Available");
       i = read (dev_,data,5);
@@ -309,40 +308,31 @@ namespace asctec
       }
       ROS_DEBUG("Control Response Code %0x",data[2]);
     }
-    ROS_INFO ("sendControl completed" );
+    //ROS_INFO ("sendControl completed" );
   }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
   {
-    int i;
-    char data[230];
-    char *cstr;
+	int i;
+	char data [5];
+	char cstr[6];
 
-    if(!telemetry->WaypointCommandsEnabled_) return;
-    ROS_DEBUG ("Waypoint enabled started");
-    flush();
-    unsigned char cmd[] = ">*>ws";
-    //telemetry->dumpCTRL_INPUT();
-    strcpy(cstr, telemetry->WAYPOINT_COMMAND_.cmd.c_str());
-    output(cstr, 5);
+	if(!telemetry->WaypointCommandsEnabled_ || !telemetry->waypointcommandflag_) return;
 
-    ROS_INFO("Got Waypoint");
+	ROS_INFO ("Waypoint enabled started");
+	flush();
 
-    if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT_.yaw + telemetry->WAYPOINT_.height + telemetry->WAYPOINT_.time + telemetry->WAYPOINT_.X + telemetry->WAYPOINT_.Y + telemetry->WAYPOINT_.max_speed + telemetry->WAYPOINT_.pos_acc + telemetry->WAYPOINT_.properties + telemetry->WAYPOINT_.wp_number) {
-    return;
-    }
-      //output(cmd,5);
-    output(cmd, 5);
-    output((unsigned char*) &telemetry->WAYPOINT_, 224);
-    
-      
+	strcpy(cstr, telemetry->WAYPOINT_COMMAND_.cmd.c_str());
+	output(cstr, 5);
+	ROS_INFO("WAYPOINT complete %s %c %c %c %c %c", cstr, cstr[0], cstr[1], cstr[2], cstr[3], cstr[4], cstr[5]);
+   
       //ROS_INFO("writing control to pelican: size of CTRL_INPUT_ %zd", sizeof(telemetry->CTRL_INPUT_));
       wait(5);
       //ROS_INFO("Data Available");
       i = read (dev_,data,5);
       if (i != 5) {
-        ROS_ERROR("Control Response : Insufficient Data");
+        ROS_ERROR("Control Response : Insufficient Data from Waycommand");
         flush();
         return;
       }
@@ -356,8 +346,47 @@ void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
         flush();
         return;
       }
-      ROS_DEBUG("Control Response Code %0x",data[2]);
+    ROS_INFO("Control Response Code %c%c%0x%c%c",data[0], data[1], data[2], data[3], data[4]);
     ROS_INFO ("sendWaypointCommand completed" );
+    telemetry->waypointcommandflag_ = false;
+  }
+
+void SerialInterface::sendWaypoint (Telemetry * telemetry)
+  {
+	int i;
+	char data[5];
+	unsigned char cmd[] = ">*>ws";
+
+	if(!telemetry->WaypointCommandsEnabled_ || !telemetry->waypointflag_) return;
+	ROS_INFO ("Waypoint enabled started");
+	flush();
+	if(telemetry->WAYPOINT_.chksum != (short) 0xAAAA + telemetry->WAYPOINT_.yaw + telemetry->WAYPOINT_.height + telemetry->WAYPOINT_.time + telemetry->WAYPOINT_.X + telemetry->WAYPOINT_.Y + telemetry->WAYPOINT_.max_speed + telemetry->WAYPOINT_.pos_acc + telemetry->WAYPOINT_.properties + telemetry->WAYPOINT_.wp_number) {
+    		return;
+    	}
+	output(cmd,5);
+	ROS_INFO("WAYPOINT complete %d %d %d", telemetry->WAYPOINT_.X, telemetry->WAYPOINT_.Y, telemetry->WAYPOINT_.height);
+	output((unsigned char*) &telemetry->WAYPOINT_, sizeof(telemetry->WAYPOINT_));
+    	wait(5);
+     //ROS_INFO("Data Available");
+      i = read (dev_,data,5);
+      if (i != 5) {
+        ROS_ERROR("Control Response : Insufficient Data from waypoint");
+        flush();
+        return;
+      }
+      if (strncmp(data,">a",2) != 0) {
+        ROS_ERROR("Corrupt Response Header %c%c (%0x%0x)",data[0],data[1],data[0],data[1]);
+        flush();
+        return;
+      }
+      if (strncmp(data+3,"a<",2) != 0) {
+        ROS_ERROR("Corrupt Response Footer %c%c (%0x%0x)",data[3],data[4],data[3],data[4]);
+        flush();
+        return;
+      }
+      ROS_INFO("Control Response Code %0x",data[2]);
+    	ROS_INFO ("sendWaypoint completed" );
+	telemetry->waypointflag_ = false;
   }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
