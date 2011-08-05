@@ -29,7 +29,7 @@ int main (int argc, char **argv)
   ros::init (argc, argv, "autopilot");
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  asctec::AutoPilot::AutoPilot autopilot(nh, nh_private);
+  asctec::AutoPilot autopilot(nh, nh_private);
   ros::spin ();
   return 0;
 }
