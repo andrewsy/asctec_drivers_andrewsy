@@ -317,9 +317,19 @@ void SerialInterface::sendWaypointCommands (Telemetry * telemetry)
 	int i;
 	char data [5];
 	char cstr[6];
-
+	/*if (telemetry->WaypointCommandsEnabled_) {
+		ROS_INFO("WAYPOINTCOMMANDSENABLED TRUE");
+	} else {
+		ROS_INFO("WAYPOINTCOMMANDSENABLED FALSE");
+	}
+	if (telemetry->waypointcommandflag_) {
+		ROS_INFO("WAYPOINTCOMMANDFLAG TRUE");
+	} else {
+		ROS_INFO("WAYPOINTCOMMANDFLAG FALSE");
+	}*/
+	
 	if(!telemetry->WaypointCommandsEnabled_ || !telemetry->waypointcommandflag_) return;
-
+	
 	ROS_INFO ("Waypoint enabled started");
 	flush();
 

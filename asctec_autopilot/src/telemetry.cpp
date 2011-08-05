@@ -194,8 +194,8 @@ namespace asctec
     waypointcommandflag_ = false;
     commandSubscriber_ = nh_.subscribe("WAYCOMMAND", 1, &Telemetry::copyWAYPOINT_COMMAND, telemetry_, ros::TransportHints().tcpNoDelay());
     waypointSubscriber_ = nh_.subscribe("WAYPOINT", 1, &Telemetry::copyWAYPOINT_DATA, telemetry_, ros::TransportHints().tcpNoDelay());
-   // ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
-   // ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
+    //ROS_INFO("Listening to %s data on topic: %s", "WAYPOINT","WAYPOINT");
+    //ROS_INFO("Listening to %s data on topic: %s", "WAYCOMMAND","WAYCOMMAND");
     ROS_DEBUG ("Telemetry::enableWaypointCommands()");
     WaypointCommandsEnabled_ = true;
   }
@@ -512,11 +512,13 @@ namespace asctec
 
 /////////////////////////////////////
   void Telemetry::copyWAYPOINT_COMMAND (asctec_msgs::WaypointCommand msg){
+	ROS_INFO("COPY WAYPOINT COMMAND");
 	WAYPOINT_COMMAND_.cmd = msg.cmd;
 	waypointcommandflag_ = true;
   }
 
   void Telemetry::copyWAYPOINT_DATA (asctec_msgs::WaypointData msg){
+	ROS_INFO("COPY WAYPOINT DATA");
 	WAYPOINT_.wp_number = msg.wp_number;
 	WAYPOINT_.dummy_1 = msg.dummy_1;
 	WAYPOINT_.dummy_2 = msg.dummy_2;

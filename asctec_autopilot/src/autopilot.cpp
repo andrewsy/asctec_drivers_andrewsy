@@ -188,7 +188,7 @@ namespace asctec
     else {
 //ROS_INFO ("SENDCONTROL");
         serialInterface_->sendControl(telemetry_);
-ROS_INFO ("SENDWAYPOINTCMD");
+//ROS_INFO ("SENDWAYPOINTCMD");
         serialInterface_->sendWaypointCommands(telemetry_);/////////////////////////////////////////////
         serialInterface_->sendWaypoint(telemetry_);/////////////////////////////////////////////
     }
